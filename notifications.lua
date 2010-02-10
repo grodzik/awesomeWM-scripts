@@ -234,8 +234,10 @@ function add_calendar(inc_offset, tout)
     local year = string.format("%4s", math.floor(datespec / 12))
     datespec = (datespec % 12 + 1) .. " " .. math.floor(datespec / 12)
     local day = string.format("%2s", tonumber(os.date("%d")))
-    local cal = awful.util.pread("cal -m " .. datespec .. "| sed 's/\\([ [:alnum:]]\\+ [ [:alnum:]]\\+ [ [:alnum:]]\\+ [ [:alnum:]]\\+ [ [:alnum:]]\\+ [ [:alnum:]]\\+ \\)\\([ [:alnum:]]\\{2\\}\\)/<span color=\"white\">\\1<\\/span><span color=\"red\">\\2<\\/span>/'|sed 's/\\([^0-9]\\+\\)\\(".. day .. "\\)\\([ <]\\{1\\}\\)/\\1<span color=\"cyan\">\\2<\\/span>\\3/g'")
+    local cal = awful.util.pread("cal -m " .. datespec .. "| sed '2,$s/\\([ [:alnum:]]\\+ [ [:alnum:]]\\+ [ [:alnum:]]\\+ [ [:alnum:]]\\+ [ [:alnum:]]\\+ \\)\\([ [:alnum:]]\\+ \\)\\([ [:alnum:]]\\{2\\}\\)/<span color=\"white\">\\1<\\/span><span color=\"#00b609\">\\2<\\/span><span color=\"red\">\\3<\\/span>/'|sed '2,$s/\\([^0-9]\\+\\)\\(".. day .. "\\)\\([ <]\\{1\\}\\)/\\1<span color=\"cyan\">\\2<\\/span>\\3/g'")
     cal = string.gsub(cal, "^%s*(.-)%s*$", "%1")
+    cal = string.gsub(cal, "([^\n]+)", string.format("%20s", "%1"), 1)
+    cal = string.gsub(cal, "\n([^\n]+)", string.format("\n%20s", "%1"))
     local events, today, prev, tomorrow, future
     today = ""
     tomorrow = ""

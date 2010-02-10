@@ -7,9 +7,9 @@ require("beautiful")
 -- Notification library
 require("naughty")
 
-naughty.config.position = "top_left"
---naughty.config.width = 200
-
+naughty.config.presets.low.border_color = "#FFFFFF"
+naughty.config.presets.normal.border_color = "#FFFFFF"
+naughty.config.presets.critical.border_color = "#FFFFFF"
 
 data_dir = os.getenv("HOME") .. "/.local/share/awesome/"
 
