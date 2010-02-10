@@ -15,7 +15,7 @@ data_dir = os.getenv("HOME") .. "/.local/share/awesome/"
 
 -- {{{ Variable definitions
 -- Themes define colours, icons, and wallpapers
-beautiful.init(data_dir .. "/zenburn/theme.lua")
+beautiful.init(data_dir .. "/grodzik/theme.lua")
 
 -- This is used later as the default terminal and editor to run.
 terminal = "xterm"
@@ -122,41 +122,33 @@ for s = 1, screen.count() do
             layout = awful.widget.layout.horizontal.leftright 
         }, 
         { 
---            widgets["taglist"][s],
+            widgets["calendarimage"], 
+            widgets["clockimage"], 
             widgets["textclock"], 
+            widgets["separator"], 
             widgets["hdapsimage"],
---            widgets["bat"], 
+            widgets["separator"], 
             widgets["batimage"],
             widgets["bat_text"], 
             widgets["separator"], 
             widgets["tempimage"],
             widgets["temp"],
---            widgets["separator"], 
---            widgets["swap"], 
             widgets["separator"], 
             widgets["swapimage"], 
             widgets["swap_text"], 
---            widgets["ram"], 
             widgets["ramimage"], 
             widgets["ram_text"], 
             widgets["separator"], 
---            widgets["cpu1"], 
---            widgets["procimage2"], 
---            widgets["cpu1_text"], 
---            widgets["cpu1_freqtext"],
-            widgets["separator"], 
---            widgets["cpu0"], 
---            widgets["procimage1"], 
             widgets["procimage"], 
             widgets["cpu_text"], 
+            widgets["separator"], 
             widgets["disks"],
+            widgets["separator"], 
             widgets["downloadimage"],
             widgets["net_stat_down"],
             widgets["uploadimage"],
             widgets["net_stat_up"],
             widgets["netimage"],
---            widgets["cpu0_text"], 
---            widgets["cpu0_freqtext"],
             layout = awful.widget.layout.horizontal.rightleft 
         }, 
         widgets["tasklist"][s], 

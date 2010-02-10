@@ -12,25 +12,32 @@ perc_width = 31
 cpufreq_width = 48
 psign = "%"
 
-widgets["textclock"] = awful.widget.textclock({ align = "right" })
+widgets["textclock"] = awful.widget.textclock({ align = "right" }, "%H:%M" )
 widgets["textclock"].layout = awful.widget.layout.horizontal.rightleft
 
-widgets["textclock"]:add_signal("mouse::enter", function()
+widgets["clockimage"] = widget({ type = "imagebox" })
+widgets["clockimage"].image = image(data_dir .. "/grodzik/images/time.png")
+
+widgets["calendarimage"] = widget({ type = "imagebox" })
+widgets["calendarimage"].image = image(data_dir .. "/grodzik/images/cal.png")
+
+widgets["calendarimage"]:add_signal("mouse::enter", function()
     add_calendar(0, 0)
 end)
-widgets["textclock"]:add_signal("mouse::leave", function()
+widgets["calendarimage"]:add_signal("mouse::leave", function()
     remove_notification("calendar")
 end)
 
-widgets["textclock"]:buttons({
-    awful.button({ }, 1, function()
-        naughty.notify({ text = "a" })
-        add_calendar(-1, 0)
-    end),
-    awful.button({ }, 2, function()
-        add_calendar(1, 0)
-    end),
-})
+widgets["calendarimage"]:buttons(
+    awful.util.table.join(
+        awful.button({ }, 1, function()
+            add_calendar(-1, 0)
+        end),
+        awful.button({ }, 3, function()
+            add_calendar( 1, 0)
+        end)
+    ) 
+)
 
 function cpu_update(acpu)
     local file = assert(io.open("/proc/stat","r"))
@@ -181,41 +188,6 @@ function active_net_dev_update()
     return net_dev
 end
 
-
---widgets["cpu0"] = awful.widget.progressbar()
---widgets["cpu0"].layout = awful.widget.layout.horizontal.rightleft
---widgets["cpu0"]:set_width(10)
---widgets["cpu0"]:set_height(16)
---widgets["cpu0"]:set_vertical(true)
---widgets["cpu0"]:set_color("#00FF00")
-
---widgets["cpu0_text"] = widget({ type = "textbox" })
---widgets["cpu0_text"].width = perc_width
---widgets["cpu0_text"].align = "right"
---widgets["cpu0_text"].text = tostring(math.floor(cpu_update("cpu0"))) .. psign
-
---widgets["cpu0_freqtext"] = widget({ type = "textbox" })
---widgets["cpu0_freqtext"].width = cpufreq_width
---widgets["cpu0_freqtext"].align = "right"
---widgets["cpu0_freqtext"].text = tostring(cpufreq_update("0"))
-
---widgets["cpu1"] = awful.widget.progressbar()
---widgets["cpu1"].layout = awful.widget.layout.horizontal.rightleft
---widgets["cpu1"]:set_width(10)
---widgets["cpu1"]:set_height(16)
---widgets["cpu1"]:set_vertical(true)
---widgets["cpu1"]:set_color("#00FF00")
-
---widgets["cpu1_text"] = widget({ type = "textbox" })
---widgets["cpu1_text"].width = perc_width
---widgets["cpu1_text"].align = "right"
---widgets["cpu1_text"].text = tostring(math.floor(cpu_update("cpu1"))) .. psign
-
---widgets["cpu1_freqtext"] = widget({ type = "textbox" })
---widgets["cpu1_freqtext"].width = cpufreq_width
---widgets["cpu1_freqtext"].align = "right"
---widgets["cpu1_freqtext"].text = tostring(cpufreq_update("1"))
-
 widgets["cpu_text"] = widget({ type = "textbox" })
 widgets["cpu_text"].width = perc_width
 widgets["cpu_text"].align = "right"
@@ -226,41 +198,8 @@ timers["cpu"]:add_signal("timeout",
     function () 
         local v = cpu_update("cpu")
         widgets["cpu_text"].text = tostring( math.floor(v/2 + 0.5) ) .. psign
---        widgets["cpu0"]:set_value( v )
---        widgets["cpu0_text"].text = tostring( math.floor(v) ) .. psign
---        v = cpu_update("cpu1")
---        widgets["cpu1"]:set_value( v ) 
---        widgets["cpu1_text"].text = tostring( math.floor(v) ) .. psign
---
     end)
 timers["cpu"]:start()
-
---timers["cpufreq"] = timer({ timeout = 2 })
---timers["cpufreq"]:add_signal("timeout", 
---    function () 
---        local v = cpufreq_update("0")
---        widgets["cpu0_freqtext"].text = tostring( v ) .. "MHz"
---        v = cpufreq_update("1")
---        widgets["cpu1_freqtext"].text = tostring( v ) .. "MHz"
---    end)
---timers["cpufreq"]:start()
-
---widgets["ram"] = awful.widget.progressbar()
---widgets["ram"].layout = awful.widget.layout.horizontal.rightleft
---widgets["ram"]:set_width(10)
---widgets["ram"]:set_height(16)
---widgets["ram"]:set_vertical(true)
---widgets["ram"]:set_color("#00FF00")
-
---widgets["swap"] = awful.widget.progressbar()
---widgets["swap"].layout = awful.widget.layout.horizontal.rightleft
---widgets["swap"]:set_width(10)
---widgets["swap"]:set_height(16)
---widgets["swap"]:set_vertical(true)
---widgets["swap"]:set_color("#00FF00")
-
---widgets["ram"]:set_value( mem_update("ram") )
---widgets["swap"]:set_value( mem_update("swap") )
 
 widgets["ram_text"] = widget({ type = "textbox" })
 widgets["ram_text"].width = perc_width
@@ -274,46 +213,24 @@ widgets["swap_text"].text = mem_update("swap") .. psign
 
 timers["mem"] = timer({ timeout = 15 })
 timers["mem"]:add_signal("timeout", function () 
---        widgets["ram"]:set_value( mem_update("ram") )
---        widgets["swap"]:set_value( mem_update("swap") )
         widgets["ram_text"].text = mem_update("ram") .. psign
         widgets["swap_text"].text = mem_update("swap") .. psign
     end)
 timers["mem"]:start()
 
---widgets["bat"] = awful.widget.progressbar()
---widgets["bat"].layout = awful.widget.layout.horizontal.rightleft
---widgets["bat"]:set_width(10)
---widgets["bat"]:set_height(16)
---widgets["bat"]:set_vertical(true)
---widgets["bat"]:set_color("#00FF00")
---widgets["bat"]:set_value( bat_update() )
-
 widgets["bat_text"] = widget({ type="textbox", align="right" })
-widgets["bat_text"].text = tostring(bat_update()) .. psign
+widgets["bat_text"].text = string.format('%s%s', bat_update(), psign)
 widgets["bat_text"].align = "right"
 widgets["bat_text"].width = perc_width
 
 widgets["batimage"] = widget({ type = "imagebox" })
-widgets["batimage"].image = image(data_dir .. "/images/battery.png")
+widgets["batimage"].image = image(data_dir .. "/grodzik/images/bat.png")
 
 -- 1 full, 2 low, 3 critical
-curbatimage = 1
 timers["bat"] = timer({ timeout = 30 })
 timers["bat"]:add_signal("timeout", function () 
     local v = bat_update() 
-    if v <= 5 and curbatimage ~= 3 then
-        widgets["batimage"].image = image(data_dir .. "/images/battery-caution.png")
-        curbatimage = 3
-    elseif v > 5 and v < 20 and curbatimage ~= 2 then
-        widgets["batimage"].image = image(data_dir .. "/images/battery-low.png")
-        curbatimage = 2
-    elseif v >= 20 and curbatimage ~= 1 then
-        widgets["batimage"].image = image(data_dir .. "/images/battery.png")
-        curbatimage = 1
-    end
---    widgets["bat"]:set_value(v)
-    widgets["bat_text"].text = tostring(v) .. psign
+    widgets["bat_text"].text = string.format('%s%s', v, psign)
 end)
 timers["bat"]:start()
 
@@ -327,20 +244,20 @@ end)
 timers["temp"]:start()
 
 widgets["tempimage"] = widget({ type = "imagebox" })
-widgets["tempimage"].image = image(data_dir .. "/images/temp.png")
+widgets["tempimage"].image = image(data_dir .. "/grodzik/images/temp.png")
 
 widgets["hdapsimage"] = widget({ type = "imagebox" })
-widgets["hdapsimage"].image = image(data_dir .. "/images/disc_running.png")
+widgets["hdapsimage"].image = image(data_dir .. "/grodzik/images/hdaps-off.png")
 
 timers["hdaps"] = timer({ timeout = 1 })
 hdaps = 1
 timers["hdaps"]:add_signal("timeout", function ()
         local s = hdaps_update()
         if s ~= 0 and hdaps == 1 then
-            widgets["hdapsimage"].image = image(data_dir .. "/images/disc_stopped.png")
+            widgets["hdapsimage"].image = image(data_dir .. "/grodzik/images/hdaps-on.png")
             hdaps = 2
         elseif s == 0 and hdaps == 2 then
-            widgets["hdapsimage"].image = image(data_dir .. "/images/disc_running.png")
+            widgets["hdapsimage"].image = image(data_dir .. "/grodzik/images/hdaps-off.png")
             hdaps = 1
         end
     end)
@@ -368,9 +285,9 @@ widgets["netimage"] = widget({ type = "imagebox" })
 net_active_dev = active_net_dev_update()
 
 if net_active_dev == "eth0" then
-    widgets["netimage"].image = image(data_dir .. "/images/network-wire.png")
+    widgets["netimage"].image = image(data_dir .. "/grodzik/images/wire.png")
 else
-    widgets["netimage"].image = image(data_dir .. "/images/network-wireless.png")
+    widgets["netimage"].image = image(data_dir .. "/grodzik/images/wifi.png")
 end
 widgets["net_dev"] = widget({ type = "textbox"})
 widgets["net_dev"].align = "right"
@@ -407,36 +324,29 @@ timers["net_misc"]:add_signal("timeout", function ()
         if net_active_dev == "eth0" then
             widgets["netimage"].image = image(data_dir .. "/images/network-wire.png")
         else
-            widgets["netimage"].image = image(data_dir .. "/images/network-wireless.png")
+            widgets["netimage"].image = image(data_dir .. "/grodzik/images/wifi.png")
         end
---        widgets["net_dev"].text = net_active_dev .. " "
     end
 end)
 timers["net_misc"]:start()
 
 widgets["uploadimage"] = widget({ type = "imagebox" })
-widgets["uploadimage"].image = image(data_dir .. "/images/upload.png")
+widgets["uploadimage"].image = image(data_dir .. "/grodzik/images/up.png")
 
 widgets["downloadimage"] = widget({ type = "imagebox" })
-widgets["downloadimage"].image = image(data_dir .. "/images/download.png")
+widgets["downloadimage"].image = image(data_dir .. "/grodzik/images/down.png")
 
-widgets["separator"] = widget({ type="textbox" })
-widgets["separator"].text = " "
+widgets["separator"] = widget({ type="imagebox" })
+widgets["separator"].image = image(data_dir .. "/grodzik/images/separator.png")
 
 widgets["procimage"] = widget({ type = "imagebox" })
-widgets["procimage"].image = image(data_dir .. "/images/processor.png")
-
-widgets["procimage1"] = widget({ type = "imagebox" })
-widgets["procimage1"].image = image(data_dir .. "/images/chip1.png")
-
-widgets["procimage2"] = widget({ type = "imagebox" })
-widgets["procimage2"].image = image(data_dir .. "/images/chip2.png")
+widgets["procimage"].image = image(data_dir .. "/grodzik/images/cpu.png")
 
 widgets["ramimage"] = widget({ type = "imagebox" })
-widgets["ramimage"].image = image(data_dir .. "/images/ram.png")
+widgets["ramimage"].image = image(data_dir .. "/grodzik/images/mem.png")
 
 widgets["swapimage"] = widget({ type = "imagebox" })
-widgets["swapimage"].image = image(data_dir .. "/images/disc.png")
+widgets["swapimage"].image = image(data_dir .. "/grodzik/images/disk.png")
 
 -- Create a systray
 widgets["systray"] = widget({ type = "systray" })

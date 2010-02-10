@@ -230,11 +230,11 @@ function add_calendar(inc_offset, tout)
     offset = save_offset + inc_offset
     local datespec = os.date("*t")
     datespec = datespec.year * 12 + datespec.month - 1 + offset
+    local month = string.format("%2s", datespec%12 + 1)
+    local year = string.format("%4s", math.floor(datespec / 12))
     datespec = (datespec % 12 + 1) .. " " .. math.floor(datespec / 12)
     local day = string.format("%2s", tonumber(os.date("%d")))
-    local month = string.format("%2s", tonumber(os.date("%m")))
-    local year = string.format("%4s", tonumber(os.date("%Y")))
-    local cal = awful.util.pread("cal -m " .. datespec .. "| sed 's/\\([ [:alnum:]]\\+ [ [:alnum:]]\\+ [ [:alnum:]]\\+ [ [:alnum:]]\\+ [ [:alnum:]]\\+ [ [:alnum:]]\\+ \\)\\([ [:alnum:]]\\{2\\}\\)/<span color=\"white\">\\1<\\/span><span color=\"red\">\\2<\\/span>/'|sed 's/\\(".. day .. "\\) /<span color=\"cyan\">\\1 <\\/span>/g'")
+    local cal = awful.util.pread("cal -m " .. datespec .. "| sed 's/\\([ [:alnum:]]\\+ [ [:alnum:]]\\+ [ [:alnum:]]\\+ [ [:alnum:]]\\+ [ [:alnum:]]\\+ [ [:alnum:]]\\+ \\)\\([ [:alnum:]]\\{2\\}\\)/<span color=\"white\">\\1<\\/span><span color=\"red\">\\2<\\/span>/'|sed 's/\\([^0-9]\\+\\)\\(".. day .. "\\)\\([ <]\\{1\\}\\)/\\1<span color=\"cyan\">\\2<\\/span>\\3/g'")
     cal = string.gsub(cal, "^%s*(.-)%s*$", "%1")
     local events, today, prev, tomorrow, future
     today = ""
@@ -275,16 +275,19 @@ function add_calendar(inc_offset, tout)
     else
         month = string.format("%2s", tonumber(month)+1)
     end
+    local nextm = ""
     if date_events[year] ~= nil then
         if date_events[year][month] ~= nil then
-            events = events .. "\n\nNext month events:"
             for e = 1, #date_events[year][month] do
-                events = events .. string.format('\n<span color="green">%s</span> - <span color="white">%s</span>', date_events[year][month][e][1], date_events[year][month][e][4])
+                nextm = nextm .. string.format('\n<span color="green">%s</span> - <span color="white">%s</span> (<span color="cyan">%s</span>)', date_events[year][month][e][1], date_events[year][month][e][5], date_events[year][month][e][4])
             end
         end
     end
+    if #nextm > 0 then
+        events = events .. "\n\nNext month events:" .. nextm
+    end
     add_notification("calendar", 
-        {text = string.format('<span font_desc="%s">%s</span>', "monospace", os.date("%a, %d %B %Y") .. "\n" .. cal .. events),
+        {text = string.format('<span font_desc="%s">Today is:\n%s</span>', "monospace", os.date("%a, %d %B %Y") .. "\n\n" .. cal .. events),
         timeout = tout, hover_timeout = 0.5,
     })
 end
