@@ -1,9 +1,10 @@
-require("notifications")
 
 cpus_old = {}
 widgets = {}
 timers = {}
 nets_old = {}
+
+memory = {}
 
 net_active_dev = "eth0"
 net_width = 40
@@ -12,8 +13,17 @@ perc_width = 31
 cpufreq_width = 48
 psign = "%"
 
+require("notifications")
+
 widgets["textclock"] = awful.widget.textclock({ align = "right" }, "%H:%M" )
 widgets["textclock"].layout = awful.widget.layout.horizontal.rightleft
+
+widgets["textclock"]:add_signal("mouse::enter", function()
+    add_worldtime(0)
+end)
+widgets["textclock"]:add_signal("mouse::leave", function()
+    remove_notification("worldtime")
+end)
 
 widgets["clockimage"] = widget({ type = "imagebox" })
 widgets["clockimage"].image = image(data_dir .. "/grodzik/images/time.png")
@@ -64,32 +74,31 @@ function cpufreq_update(cpunum)
 end
 
 function mem_update(what)
-    local memtotal, memfree, buff, cached, swapfree, swaptotal
     local str, val
     local file = assert(io.open("/proc/meminfo", "r"))
     for line in file:lines() do
         str, val = string.match(line, "([%w_]+):\ +(%d+)")
         if  str == "MemTotal" then
-            memtotal = val
+            memory["memtotal"] = val
         elseif str == "MemFree" then
-            memfree = val
+            memory["memfree"] = val
         elseif str == "Buffers" then
-            buff = val
+            memory["buff"] = val
         elseif str == "Cached" then
-            cached = val
+            memory["cached"] = val
         elseif str == "SwapFree" then
-            swapfree = val
+            memory["swapfree"] = val
         elseif str == "SwapTotal" then
-            swaptotal = val
+            memory["swaptotal"] = val
         end
     end
     file:close()
     if what == "ram" then
-        local mem = ( memtotal - ( memfree + buff + cached ) ) * 100 / memtotal
+        local mem = ( memory["memtotal"] - ( memory["memfree"] + memory["buff"] + memory["cached"] ) ) * 100 / memory["memtotal"]
         return math.floor(mem + 0.5)
     else
-        if tonumber(swaptotal) > 0 then
-            local swap = ( swaptotal - swapfree ) * 100 / swaptotal
+        if tonumber(memory["swaptotal"]) > 0 then
+            local swap = ( memory["swaptotal"] - memory["swapfree"] ) * 100 / memory["swaptotal"]
             return math.floor(swap + 0.5)
         else
             return 0
@@ -206,10 +215,24 @@ widgets["ram_text"].width = perc_width
 widgets["ram_text"].align = "right"
 widgets["ram_text"].text = mem_update("ram") .. psign
 
+widgets["ram_text"]:add_signal("mouse::enter", function()
+    mem_show(0)
+end)
+widgets["ram_text"]:add_signal("mouse::leave", function()
+    remove_notification("mem_stats")
+end)
+
 widgets["swap_text"] = widget({ type = "textbox" })
 widgets["swap_text"].width = perc_width
 widgets["swap_text"].align = "right"
 widgets["swap_text"].text = mem_update("swap") .. psign
+
+widgets["swap_text"]:add_signal("mouse::enter", function()
+    mem_show(0)
+end)
+widgets["swap_text"]:add_signal("mouse::leave", function()
+    remove_notification("mem_stats")
+end)
 
 timers["mem"] = timer({ timeout = 15 })
 timers["mem"]:add_signal("timeout", function () 
@@ -284,10 +307,10 @@ widgets["netimage"] = widget({ type = "imagebox" })
 
 net_active_dev = active_net_dev_update()
 
-if net_active_dev == "eth0" then
-    widgets["netimage"].image = image(data_dir .. "/grodzik/images/wire.png")
-else
+if net_active_dev == "wlan0" then
     widgets["netimage"].image = image(data_dir .. "/grodzik/images/wifi.png")
+else
+    widgets["netimage"].image = image(data_dir .. "/grodzik/images/wire.png")
 end
 widgets["net_dev"] = widget({ type = "textbox"})
 widgets["net_dev"].align = "right"
@@ -321,10 +344,10 @@ timers["net_misc"]:add_signal("timeout", function ()
     local nad = active_net_dev_update()
     if nad ~= net_active_dev then
         net_active_dev = nad
-        if net_active_dev == "eth0" then
-            widgets["netimage"].image = image(data_dir .. "/images/network-wire.png")
-        else
+        if net_active_dev == "wlan0" then
             widgets["netimage"].image = image(data_dir .. "/grodzik/images/wifi.png")
+        else
+            widgets["netimage"].image = image(data_dir .. "/grodzik/images/wire.png")
         end
     end
 end)
@@ -347,6 +370,19 @@ widgets["ramimage"].image = image(data_dir .. "/grodzik/images/mem.png")
 
 widgets["swapimage"] = widget({ type = "imagebox" })
 widgets["swapimage"].image = image(data_dir .. "/grodzik/images/disk.png")
+
+widgets["ramimage"]:add_signal("mouse::enter", function()
+    mem_show(0)
+end)
+widgets["ramimage"]:add_signal("mouse::leave", function()
+    remove_notification("mem_stats")
+end)
+widgets["swapimage"]:add_signal("mouse::enter", function()
+    mem_show(0)
+end)
+widgets["swapimage"]:add_signal("mouse::leave", function()
+    remove_notification("mem_stats")
+end)
 
 -- Create a systray
 widgets["systray"] = widget({ type = "systray" })

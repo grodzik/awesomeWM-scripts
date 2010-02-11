@@ -326,11 +326,10 @@ function netcard_show(tout)
             j = j + 1
         end
 
-        str = string.format('\n<span font="monospace">%15s: <span color="green">%s</span>\n%15s: <span color="yellow">%s</span>\n%15s: <span color="red">%s</span>\n%15s: <span color="white">%s</span></span>', "ESSID",essid, "Quality", lq, "Bit Rate", br, "Access Point", ap)
+        str = string.format('\n<span font="monospace">%15s: <span color="green">%s</span>\n%15s: <span color="yellow">%s</span>\n%15s: <span color="red">%s</span>\n%15s: <span color="white">%s</span></span>', "ESSID",essid or "-", "Quality", lq or "-", "Bit Rate", br or "-", "Access Point", ap or "-")
     end
-    add_notification("netcard_stats", { text = string.format(
-        '<span font="monospace">%15s: <span color="gray">%s</span>\n%15s: <span color="green">%s</span>\n%15s: <span color="yellow">%s</span>\n%15s: <span color="cyan">%s</span></span>' .. str,
-         "MAC", mac, "IP", ip, "Mask", mask, "Broadcast", broadcast), timeout = tout} )
+    add_notification("netcard_stats", { text = string.format( 
+        '%s:\n<span font="monospace">%15s: <span color="gray">%s</span>\n%15s: <span color="green">%s</span>\n%15s: <span color="yellow">%s</span>\n%15s: <span color="cyan">%s</span></span>' .. str, net_active_dev, "MAC", mac or "-", "IP", ip or "-", "Mask", mask or "-", "Broadcast", broadcast or "-"), timeout = tout} )
 
 end
 
@@ -352,3 +351,22 @@ function disks_show(tout)
     add_notification("disks_stats", { text = "<span font=\"monospace\">"..ds.."</span>", timeout = tout })
 end
 
+function add_worldtime(tout)
+    local t = os.date("*t")
+    add_notification("worldtime", { text = string.format("%s", t.year), timeout = tout })
+end
+
+function mem_show(tout)
+    local mem = string.format("RAM:\n%7s: %7s Mb\n%7s: %7s Mb\n%7s: %7s Mb\n%7s: %7s Mb\n%7s: %7s Mb\n%7s: %7s %%\nSWAP:\n%7s: %7s Mb\n%7s: %7s Mb\n%7s: %7s Mb",
+        "Total", math.floor(memory["memtotal"]/1024),
+        "Used", math.floor((memory["memtotal"] - (memory["memfree"] + memory["buff"] + memory["cached"]))/1024),
+        "Free", math.floor((memory["memfree"] + memory["buff"] + memory["cached"])/1024),
+        "Buffer", math.floor(memory["buff"]/1024),
+        "Cached", math.floor(memory["cached"]/1024),
+        "%", math.floor((memory["memtotal"] - memory["memfree"]) * 100 / memory["memtotal"]),
+        "Total", math.floor(memory["swaptotal"] / 1024),
+        "Used", math.floor((memory["swaptotal"] - memory["swapfree"]) / 1024),
+        "Free", math.floor(memory["swapfree"] / 1024)
+        )
+    add_notification("mem_stats", { text = mem, timeout  = tout, font = "monospace"})
+end
