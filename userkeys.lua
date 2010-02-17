@@ -3,7 +3,10 @@ val = nil
 globalkeys = awful.util.table.join(
         awful.key({ modkey, }, "Left",   awful.tag.viewprev       ),
         awful.key({ modkey, }, "Right",  awful.tag.viewnext       ),
-        awful.key({ modkey, }, "0", awful.tag.viewnone ),
+        awful.key({ modkey, }, "0", function ()
+            awful.tag.viewnone()
+            widgets["curtag"].text = " zero"
+        end),
         awful.key({ modkey, }, "p", function()
 --            widgets["curtag"].text = awful.tag.selected().name
               tags[1][1]:emit_signal("selected")

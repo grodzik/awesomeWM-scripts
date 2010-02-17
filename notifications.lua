@@ -352,11 +352,13 @@ function disks_show(tout)
 end
 
 function add_worldtime(tout)
+    remove_notification("worldtime")
     local t = os.date("*t")
     add_notification("worldtime", { text = string.format("%s", t.year), timeout = tout })
 end
 
 function mem_show(tout)
+    remove_notification("mem_stats")
     local mem = string.format("RAM:\n%7s: %7s Mb\n%7s: %7s Mb\n%7s: %7s Mb\n%7s: %7s Mb\n%7s: %7s Mb\n%7s: %7s %%\nSWAP:\n%7s: %7s Mb\n%7s: %7s Mb\n%7s: %7s Mb",
         "Total", math.floor(memory["memtotal"]/1024),
         "Used", math.floor((memory["memtotal"] - (memory["memfree"] + memory["buff"] + memory["cached"]))/1024),

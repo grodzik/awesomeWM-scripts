@@ -3,14 +3,6 @@ function game_start(game)
     awful.util.spawn(game)
 end
 
-webmenu = {    
-    { "Uzbl", "uzbl-browser" },
-    { "Arora", "arora" },
-    { "Chromium", "chromium-bin" },
-    { "Firefox", "firefox" },
-    { "Opera", "opera" }
-}
-
 programmingmenu = {
     { "Vim", terminal .. " -e vim" },
     { "gVim", "gvim" },
@@ -21,7 +13,8 @@ programmingmenu = {
 netmenu = {
     { "Skype", "skype" },
     { "EKG2", terminal .. " -e ekg2" },
-    { "Mutt", terminal .. " -e mutt" }
+    { "Mutt", terminal .. " -e mutt" },
+    { "GoogleEarth", "googleearth" }
 }
 
 virtualmenu = {
@@ -49,9 +42,9 @@ multimediamenu = {
 
 gamesmenu = {
     { "Frozen-Bubble", function () game_start("frozen-bubble") end },
-    { "Pocket Tanks", function () game_start("wine start /unix \"/home/grodzik/.wine/drive_c/Program Files/Pocket Tanks Deluxe/pockettanks.exe\"") end },
+    { "Icy Tower", function () game_start("wine start /unix \"/home/grodzik/.wine/drive_c/games/icytower1.4/icytower14.exe\"") end },
     { "Atomic Tanks", function () game_start("atanks") end },
-    { "Diablo 2: LoD", function () game_start("wine start /unix \"/home/grodzik/.wine/drive_c/Diablo II/Diablo II.exe\"") end },
+--    { "Diablo 2: LoD", function () game_start("wine start /unix \"/home/grodzik/.wine/drive_c/Diablo II/Diablo II.exe\"") end },
     { "Simutrans", function () game_start("simutrans") end },
     { "Wesnoth", function () game_start("wesnoth") end }
 }
@@ -68,7 +61,6 @@ mainmenu = awful.menu({
             { "xterm", terminal },
             { "root", terminal .. " -e su -" },
             { "Programming", programmingmenu },
-            { "Browsers", webmenu },
             { "Net", netmenu },
             { "Multimedia", multimediamenu },
             { "VM", virtualmenu },

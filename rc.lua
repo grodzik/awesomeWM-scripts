@@ -11,6 +11,14 @@ naughty.config.presets.low.border_color = "#FFFFFF"
 naughty.config.presets.normal.border_color = "#FFFFFF"
 naughty.config.presets.critical.border_color = "#FFFFFF"
 
+naughty.config.presets.low.max_width = 500
+naughty.config.presets.normal.max_width = 500
+naughty.config.presets.critical.max_width = 500
+
+naughty.config.presets.low.min_width = 250
+naughty.config.presets.normal.min_width = 250
+naughty.config.presets.critical.min_width = 250
+
 data_dir = os.getenv("HOME") .. "/.local/share/awesome/"
 
 -- {{{ Variable definitions
@@ -190,7 +198,9 @@ awful.rules.rules = {
     border_color = beautiful.border_normal, focus = true, keys = clientkeys,
     buttons = clientbuttons } }, 
     { rule = { class = "MPlayer" }, properties = {
-        floating = true } }, 
+        floating = true,
+        tag = tags[1][5],
+        switchtotag = tags[1][5] } }, 
     { rule = { class = "pinentry" }, properties = {
             floating = true } }, 
     { rule = { class = "Gimp" }, properties = {
