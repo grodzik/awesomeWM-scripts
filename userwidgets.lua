@@ -188,7 +188,7 @@ function active_net_dev_update()
 
     for line in f:lines() do
         local d = string.match(line, "^([%w]+)[%s]+[%w]+[%s]+[%w]+[%s]+0003")
-        if d == "wlan0" or d == "eth0" then
+        if d == "wlan0" or d == "eth0" or d == "ppp0" or d == "ppp1" then
             net_dev = d
         end
     end

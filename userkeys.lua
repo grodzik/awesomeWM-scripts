@@ -1,3 +1,24 @@
+function cmdMusic(cmd)
+    local f = io.popen(cmd .. " -f 'title: [[%artist% - %title%]|%file%]'")
+    local song, timing, percent, state
+    for line in f:lines() do
+        if string.match(line, "^title: (.+)") then
+            song = string.match(line, "^title: (.+)")
+        elseif string.match(line, "[[](%w+)[]]") then
+            state, timing, percent = string.match(line, "[[](%w+)[]]%s+#%d+/%d+%s+([^%s]+)%s+[(]([^%s]+)[)]")
+        end
+    end
+    if state == "playing" then
+        state = "<span foreground=\"#00ff00\">" .. state .. "</span>"
+    else
+        state = "<span foreground=\"#ffff00\">" .. state .. "</span>"
+    end
+    remove_notification("mpd");
+    add_notification("mpd", { timeout = 5, title = awful.util.linewrap(song, 50, 0),
+                     text = string.format("State: %s\nTiming: %s\nPercentage: %s", state, timing, percent),
+                     width = 350 })
+end
+
 --- {{{ Keybindings
 val = nil
 globalkeys = awful.util.table.join(
@@ -8,8 +29,7 @@ globalkeys = awful.util.table.join(
             widgets["curtag"].text = " zero"
         end),
         awful.key({ modkey, }, "p", function()
---            widgets["curtag"].text = awful.tag.selected().name
-              tags[1][1]:emit_signal("selected")
+            awful.util.spawn_with_shell("xclip -o | xclip -i -selection clipboard")
         end),
         awful.key({ modkey, }, "Return", 
             function() mainmenu:show(true)    end),
@@ -60,18 +80,32 @@ globalkeys = awful.util.table.join(
         awful.key({ modkey, "Mod1", "Control" }, "Left", 
             function () awful.tag.incmwfact(-0.05) end),
         --- programs ---
-        awful.key({ modkey, }, "`",
+        awful.key({ modkey, }, "x",
             function () awful.util.spawn(terminal) end),
         awful.key({ modkey, }, "t",
             function () 
-                awful.util.spawn(terminal .. " -e screen -r rtorrent") 
+                awful.util.spawn(terminal .. terminal_title_param .. " RTORRENT -e screen -r rtorrent") 
+            end),
+        awful.key({ modkey, "Control"}, "w",
+            function () 
+                awful.util.spawn(terminal .. terminal_title_param .. " WICD -e wicd-curses") 
             end),
         awful.key({ modkey, }, "u",
-            function () awful.util.spawn("uzbl-browser") end),
+            function () awful.util.spawn_with_shell(os.getenv("HOME") .. "/binarki/uzblb >> " .. os.getenv("HOME") .. "/.uzbl-errors 2>&1") end),
         awful.key({ modkey, }, "e",
             function () 
                 awful.tag.viewonly(tags[1][3])
-                focus_or_create("ekg2", terminal .. " -e ekg2") 
+                focus_or_create("EKG2", terminal .. terminal_title_param .. " EKG2 -e ekg2") 
+            end),
+        awful.key({ modkey, }, "i",
+            function () 
+                awful.tag.viewonly(tags[1][3])
+                focus_or_create("IRSSI", terminal .. terminal_title_param .. " IRSSI -e screen -R -S IRSSI -t IRSSI irssi") 
+            end),
+        awful.key({ modkey, "Control" }, "m",
+            function () 
+                awful.tag.viewonly(tags[1][5])
+                focus_or_create("MUSIC", terminal .. terminal_title_param .. " MUSIC -e ncmpcpp") 
             end),
         awful.key({ modkey, }, "f",
             function () 
@@ -81,47 +115,67 @@ globalkeys = awful.util.table.join(
         awful.key({ modkey, }, "m",
             function () 
                 awful.tag.viewonly(tags[1][4])
-                focus_or_create("mutt", terminal .. " -e \"sleep 1; mutt\"")
+                -- focus_or_create("MUTT", terminal .. terminal_title_param .. " MUTT -e \"sleep 0.2; l=0; for x in `find ${HOME}/.maildir -type d -iname \"new\"`; do if [ `ls $x|wc -l` != 0 ]; then mutt -Z; l=1; break; fi; done; [ $l -eq 1 ] || mutt\"")
+                focus_or_create("MUTT", terminal .. terminal_title_param .. " MUTT -e mutt")
             end),
         awful.key({ modkey, }, "r",
             function () awesome.restart() end),
         awful.key({  }, "XF86AudioRaiseVolume",
             function ()
-                naughty.notify({ text = io.popen("echo -n `amixer -c 0 sset PCM 5%+|sed -n 's/.*Front Left: Playback [0-9]* \\[\\([0-9]*\\)\\%\\] .*/Volume: \\1%/p'`"):read("*a") })
+                remove_notification("volume");
+                add_notification("volume", { timout = 5, text = io.popen("echo -n `amixer -c 0 sset PCM 5%+|sed -n 's/.*Front Left: Playback [0-9]* \\[\\([0-9]*\\)\\%\\] .*/Volume: \\1%/p'`"):read("*a") })
             end),
         awful.key({  }, "XF86AudioLowerVolume",
             function ()
-                naughty.notify({ text = io.popen("echo -n `amixer -c 0 sset PCM 5%-|sed -n 's/.*Front Left: Playback [0-9]* \\[\\([0-9]*\\)\\%\\] .*/Volume: \\1%/p'`"):read("*a") })
+                remove_notification("volume");
+                add_notification("volume", { timeout = 5, text = io.popen("echo -n `amixer -c 0 sset PCM 5%-|sed -n 's/.*Front Left: Playback [0-9]* \\[\\([0-9]*\\)\\%\\] .*/Volume: \\1%/p'`"):read("*a") })
             end),
         awful.key({  }, "XF86AudioMute",
             function ()
                 os.execute("amixer -c 0 set Master toggle mutt")
                 local on_off = io.popen("echo -n `amixer -c 0 get Master|sed -n 's/.*Front Left: Playback [0-9]* \\[[0-9]*\\%\\] \\[[^ ]*\\] \\[\\([a-z]*\\)\\].*/\\1/p'`"):read("*a")
+                remove_notification("volume");
                 if on_off == "on" then
-                    naughty.notify({ text = io.popen("echo -n `amixer -c 0 get PCM |sed -n 's/.*Front Left: Playback [0-9]* \\[\\([0-9]*\\)\\%\\] .*/Volume ON:\\1%/p'`"):read("*a") })
+                    add_notification("volume", { timeout = 5, text = io.popen("echo -n `amixer -c 0 get PCM |sed -n 's/.*Front Left: Playback [0-9]* \\[\\([0-9]*\\)\\%\\] .*/Volume ON:\\1%/p'`"):read("*a") })
                 else
-                    naughty.notify({ text = "Volume OFF" })
+                    add_notification("volume", { timeout = 5, text = "Volume OFF" })
                 end
             end),
         awful.key({  }, "XF86AudioNext",
             function ()
-                os.execute("xsong.pl n")
+                cmdMusic("mpc next ")
             end),
         awful.key({  }, "XF86AudioPrev",
             function ()
-                os.execute("xsong.pl p")
+                cmdMusic("mpc prev ")
             end),
         awful.key({  }, "XF86AudioPlay",
             function ()
-                os.execute("xsong.pl t")
-            end),
-        awful.key({  }, "XF86AudioPause",
-            function ()
-                os.execute("xsong.pl t")
+                cmdMusic("mpc toggle ")
             end),
         awful.key({  }, "XF86AudioStop",
             function ()
-                os.execute("mocp -x")
+                os.execute("mpc stop -q")
+            end),
+        awful.key({ modkey,  }, "/",
+            function ()
+                cmdMusic("mpc ")
+            end),
+        awful.key({ modkey, }, "F9", 
+            function ()
+                cmdMusic("mpc clear -q; mpc -q load metal; mpc play")
+            end),
+        awful.key({ modkey, }, "F10", 
+            function ()
+                cmdMusic("mpc clear -q; mpc -q load queen; mpc play")
+            end),
+        awful.key({ modkey, }, "F11", 
+            function ()
+                cmdMusic("mpc clear -q; mpc -q load ulubione; mpc play")
+            end),
+        awful.key({ modkey, }, "F12", 
+            function ()
+                cmdMusic("mpc clear -q; mpc -q load radiozet; mpc play")
             end),
         awful.key({  }, "Print",
             function ()

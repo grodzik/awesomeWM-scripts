@@ -24,7 +24,7 @@ virtualmenu = {
 }
 
 officemenu = {
-    { "Acrobat Reader", "acroread" },
+    { "&Acrobat Reader", "acroread" },
     { "Writer", "oowriter" },
     { "Calc", "oocalc" },
     { "Impress", "ooimpres" },
@@ -58,14 +58,14 @@ awesomemenu = {
 
 mainmenu = awful.menu({
         items = { 
-            { "xterm", terminal },
-            { "root", terminal .. " -e su -" },
-            { "Programming", programmingmenu },
-            { "Net", netmenu },
-            { "Multimedia", multimediamenu },
-            { "VM", virtualmenu },
-            { "Office", officemenu },
-            { "Games", gamesmenu },
-            { "Awesome", awesomemenu }
+            { "&xterm", terminal },
+            { "&root", terminal .. " -e su -" },
+            { "&Programming", programmingmenu },
+            { "&Net", netmenu },
+            { "&Multimedia", multimediamenu },
+            { "&VM", virtualmenu },
+            { "&Office", officemenu },
+            { "&Games", gamesmenu },
+            { "&Awesome", awesomemenu }
         }
     })

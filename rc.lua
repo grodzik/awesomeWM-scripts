@@ -26,7 +26,8 @@ data_dir = os.getenv("HOME") .. "/.local/share/awesome/"
 beautiful.init(data_dir .. "/grodzik/theme.lua")
 
 -- This is used later as the default terminal and editor to run.
-terminal = "xterm"
+terminal = "urxvt"
+terminal_title_param = " -title "
 editor = os.getenv("EDITOR") or "vim"
 editor_cmd = terminal .. " -e " .. editor
 -- Default modkey.
@@ -40,7 +41,7 @@ function focus_or_create(str, cmd)
     local clients = client.get()
     for i, c in pairs(clients) do
 --        naughty.notify({ text = c.name })
-        if string.find(string.lower(c.class .. " " .. c.name .. " " .. c.instance), string.lower(str)) then
+        if string.find(c.class .. " " .. c.name .. " " .. c.instance, str) then
             local ctags = c:tags()
             if table.getn(ctags) == 0 then
                 awful.client.movetotag(awful.tag.selected(), c)
@@ -76,16 +77,17 @@ for s = 1, screen.count() do
     -- Each screen has its own tag table.
     tags[s] = awful.tag({ "terms", "web", "im", "mail", "media", "terms2", "vm", "d8", "d9" }, s, layouts[3])
 end
-awful.tag.setproperty(tags[1][2], "mwfact", 0.9)
-awful.tag.setproperty(tags[1][2], "layout", layouts[5])
 awful.tag.setproperty(tags[1][1], "mwfact", 0.7)
 awful.tag.setproperty(tags[1][1], "nmaster", 2)
+awful.tag.setproperty(tags[1][2], "mwfact", 0.9)
+awful.tag.setproperty(tags[1][2], "layout", layouts[5])
+awful.tag.setproperty(tags[1][3], "layout", layouts[5])
 awful.tag.setproperty(tags[1][5], "mwfact", 0.7)
 awful.tag.setproperty(tags[1][5], "layout", layouts[1])
 awful.tag.setproperty(tags[1][5], "ncol", 2)
 awful.tag.setproperty(tags[1][7], "layout", layouts[8])
 awful.tag.setproperty(tags[1][8], "layout", layouts[8])
-awful.tag.setproperty(tags[1][9], "layout", layouts[8])
+awful.tag.setproperty(tags[1][9], "layout", layouts[5])
 
 -- }}}
 
@@ -126,6 +128,7 @@ for s = 1, screen.count() do
         { 
             widgets["layoutbox"][s], 
             widgets["curtag"],
+            s == 1 and widgets["systray"] or nil,
             widgets["prompt"][s], 
             layout = awful.widget.layout.horizontal.leftright 
         }, 
@@ -201,6 +204,8 @@ awful.rules.rules = {
         floating = true,
         tag = tags[1][5],
         switchtotag = tags[1][5] } }, 
+    { rule = { class = "Skype" }, properties = {
+        floating = true } },
     { rule = { class = "pinentry" }, properties = {
             floating = true } }, 
     { rule = { class = "Gimp" }, properties = {
@@ -208,9 +213,14 @@ awful.rules.rules = {
             switchtotag = tags[1][5] } },
     { rule = { class = "wine" }, properties = {
                 floating = true } },
-    { rule = { name = ".*EKG2" }, properties = {
+    { rule = { name = "EKG2" }, properties = {
             tag = tags[1][3],
             switchtotag = tags[1][3] } },
+    { rule = { name = "IRSSI" }, properties = {
+            tag = tags[1][3],
+            switchtotag = tags[1][3] } },
+    { rule = { name = ".*Simutrans.*" }, properties = {
+                floating = false } },
     { rule = { name = ".*Wine.*" }, properties = {
                 floating = true } },
     { rule = { name = ".*VirtualBox" }, properties = {
@@ -258,7 +268,9 @@ client.add_signal("unfocus", function(c) c.border_color = beautiful.border_norma
 for s = 1, screen.count() do
     for t = 1, #tags[s] do
         tags[s][t]:add_signal("tagged", function ()
-            widgets["curtag"].text = " " .. awful.tag.selected().name .. ":" .. #awful.tag.selected():clients() .. " "
+            if awful.tag.selected() ~= nil then
+                widgets["curtag"].text = " " .. awful.tag.selected().name .. ":" .. #awful.tag.selected():clients() .. " "
+            end
             if s == 1 and t == 1 then
                 if #tags[s][t]:clients() > 2 then
                     awful.tag.setproperty(tags[s][t], "nmaster", 2)
@@ -270,7 +282,9 @@ for s = 1, screen.count() do
             end
         end)
         tags[s][t]:add_signal("property::selected", function ()
-            widgets["curtag"].text = " " .. awful.tag.selected().name .. ":" .. #awful.tag.selected():clients() .. " "
+            if awful.tag.selected() ~= nil then
+                widgets["curtag"].text = " " .. awful.tag.selected().name .. ":" .. #awful.tag.selected():clients() .. " "
+            end
         end)
     end
 end
