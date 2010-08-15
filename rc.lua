@@ -26,8 +26,8 @@ data_dir = os.getenv("HOME") .. "/.local/share/awesome/"
 beautiful.init(data_dir .. "/grodzik/theme.lua")
 
 -- This is used later as the default terminal and editor to run.
-terminal = "urxvt"
-terminal_title_param = " -title "
+terminal = "xterm"
+terminal_title_param = " -T "
 editor = os.getenv("EDITOR") or "vim"
 editor_cmd = terminal .. " -e " .. editor
 -- Default modkey.
@@ -36,6 +36,18 @@ editor_cmd = terminal .. " -e " .. editor
 -- I suggest you to remap Mod4 to another key using xmodmap or other tools.
 -- However, you can use another modifier like Mod1, but it may interact with others.
 modkey = "Mod4"
+
+function escape(text)
+    local xml_entities = {
+        ["\""] = "&quot;",
+        ["&"]  = "&amp;",
+        ["'"]  = "&apos;",
+        ["<"]  = "&lt;",
+        [">"]  = "&gt;"
+    }
+
+    return text and text:gsub("[\"&'<>]", xml_entities)
+end
 
 function focus_or_create(str, cmd)
     local clients = client.get()
@@ -82,6 +94,7 @@ awful.tag.setproperty(tags[1][1], "nmaster", 2)
 awful.tag.setproperty(tags[1][2], "mwfact", 0.9)
 awful.tag.setproperty(tags[1][2], "layout", layouts[5])
 awful.tag.setproperty(tags[1][3], "layout", layouts[5])
+awful.tag.setproperty(tags[1][4], "layout", layouts[5])
 awful.tag.setproperty(tags[1][5], "mwfact", 0.7)
 awful.tag.setproperty(tags[1][5], "layout", layouts[1])
 awful.tag.setproperty(tags[1][5], "ncol", 2)
@@ -122,13 +135,12 @@ for s = 1, screen.count() do
     widgets["tasklist"][s].layout = awful.widget.layout.horizontal.flex
 
     -- Create the wibox
-    mywibox[s] = awful.wibox({ position = "top", screen = s, height = 17 })
+    mywibox[s] = awful.wibox({ position = "top", screen = s, height = 19 })
     -- Add widgets to the wibox - order matters
     mywibox[s].widgets = { 
         { 
             widgets["layoutbox"][s], 
             widgets["curtag"],
-            s == 1 and widgets["systray"] or nil,
             widgets["prompt"][s], 
             layout = awful.widget.layout.horizontal.leftright 
         }, 
@@ -167,6 +179,16 @@ for s = 1, screen.count() do
     }
 end
 -- }}}
+second_wibox = awful.wibox({ position = "bottom", screen = 1, height = 19 })
+second_wibox.widgets = {
+    widgets["systray"],
+    widgets["mpd"]["song"],
+    widgets["mpd"]["album"],
+    widgets["mpd"]["timing"],
+    widgets["mpd"]["percent"],
+    widgets["mail"],
+    layout = awful.widget.layout.horizontal.leftright
+}
 
 clientkeys = awful.util.table.join( 
                 awful.key({ modkey, "Shift" }, "f", 
@@ -211,6 +233,9 @@ awful.rules.rules = {
     { rule = { class = "Gimp" }, properties = {
             tag = tags[1][5],
             switchtotag = tags[1][5] } },
+    { rule = { class = "Claws Mail" }, properties = {
+            tag = tags[1][4],
+            switchtotag = tags[1][5] } },
     { rule = { class = "wine" }, properties = {
                 floating = true } },
     { rule = { name = "EKG2" }, properties = {
@@ -226,6 +251,9 @@ awful.rules.rules = {
     { rule = { name = ".*VirtualBox" }, properties = {
             tag = tags[1][7],
             switchtotag = tags[1][7] } },
+    { rule = { name = ".*UltraStar Delux.*" }, properties = {
+            tag = tags[1][8],
+            switchtotag = tags[1][8] } },
     -- Set Firefox to always map on tags number 2 of screen 1.  { rule = {
     -- class = "Firefox" }, properties = { tag = tags[1][2] } },
 }

@@ -1,3 +1,37 @@
+function musicParse(cmd)
+    local f = io.popen(cmd .. " -f 'title: [[%artist% - %title%[ (%comment%)][ /%album%/]]|%file%]'")
+    local song, timing, percent, state, album
+    song = ""
+    timing = ""
+    state = ""
+    album = ""
+    percent = "0"
+    for line in f:lines() do
+        if string.match(line, "^title: (.+) /(.+)/") then
+            song, album = string.match(line, "^title: (.+) /(.+)/")
+        elseif string.match(line, "^title: (.+)") then
+            song = string.match(line, "^title: (.+)")
+        elseif string.match(line, "[[](%w+)[]]") then
+            state, timing, percent = string.match(line, "[[](%w+)[]]%s+#%d+/%d+%s+([^%s]+)%s+[(]([%d]+)")
+        end
+    end
+    f:close()
+    if state == "playing" then
+        state = "<span foreground=\"#00ff00\">" .. state .. "</span>"
+    elseif state == "paused" then
+        state = "<span foreground=\"#ffff00\">" .. state .. "</span>"
+    else
+        state = "<span foreground=\"#ff0000\">stoped</span>"
+    end
+    local music = {}
+    music["song"] = escape(song)
+    music["album"] = escape(album)
+    music["state"] = state
+    music["timing"] = timing
+    music["percent"] = percent
+    return music
+end
+
 
 cpus_old = {}
 widgets = {}
@@ -15,7 +49,7 @@ psign = "%"
 
 require("notifications")
 
-widgets["textclock"] = awful.widget.textclock({ align = "right" }, "%H:%M" )
+widgets["textclock"] = awful.widget.textclock({ align = "right" }, "%H:%M", 10 )
 widgets["textclock"].layout = awful.widget.layout.horizontal.rightleft
 
 widgets["textclock"]:add_signal("mouse::enter", function()
@@ -122,7 +156,7 @@ function temp_update(zone)
     local file = io.open("/sys/devices/virtual/thermal/thermal_zone" .. zone .. "/temp")
     temp = math.floor(tonumber(file:read("*a"))/1000)
     file:close()
-    return tostring(temp)
+    return temp
 end
 
 function hdaps_update()
@@ -258,11 +292,11 @@ end)
 timers["bat"]:start()
 
 widgets["temp"] = widget({ type = "textbox", align = "right" })
-widgets["temp"].text = temp_update("0") .. "C " .. temp_update("1") .. "C "
+widgets["temp"].text = string.format("%sC %sC", temp_update("0"), temp_update("1"))
 
 timers["temp"] = timer({ timeout = 15 })
 timers["temp"]:add_signal("timeout", function ()
-    widgets["temp"].text = temp_update("0") .. "C " .. temp_update("1") .. "C "
+    widgets["temp"].text = string.format("%sC %sC", temp_update("0"), temp_update("1"))
 end)
 timers["temp"]:start()
 
@@ -408,3 +442,56 @@ widgets["curtag"].layout = awful.widget.layout.horizontal.leftright
 widgets["curtag"].align = "left"
 widgets["curtag"].text = " " .. awful.tag.selected().name .. ":" .. #awful.tag.selected():clients() .. " "
 
+widgets["mail"] = widget({ type = "textbox" })
+widgets["mail"].layout = awful.widget.layout.horizontal.leftright
+widgets["mail"].align = "left"
+widgets["mail"].text = ""
+
+timers["mail"] = timer({ timeout = 60 })
+timers["mail"]:add_signal("timeout", function()
+    local file = io.popen(os.getenv("HOME") .. "/binarki/countmail.sh")
+    local m = file:read("*a")
+    file:close()
+    widgets["mail"].text = m
+end)
+timers["mail"]:start()
+timers["mail"]:emit_signal("timeout")
+
+widgets["mpd"] = {}
+widgets["mpd"]["song"] = widget({ type = "textbox" })
+widgets["mpd"]["song"].layout = awful.widget.layout.horizontal.leftright
+widgets["mpd"]["song"].align = "center"
+widgets["mpd"]["song"].text = ""
+widgets["mpd"]["song"].width = 400
+widgets["mpd"]["album"] = widget({ type = "textbox" })
+widgets["mpd"]["album"].layout = awful.widget.layout.horizontal.leftright
+widgets["mpd"]["album"].align = "center"
+widgets["mpd"]["album"].text = ""
+widgets["mpd"]["album"].width = 200
+widgets["mpd"]["timing"] = widget({ type = "textbox" })
+widgets["mpd"]["timing"].layout = awful.widget.layout.horizontal.leftright
+widgets["mpd"]["timing"].align = "center"
+widgets["mpd"]["timing"].text = ""
+widgets["mpd"]["timing"].width = 80
+widgets["mpd"]["percent"] = awful.widget.progressbar()
+--widgets["mpd"]["percent"].layout = awful.widget.layout.vertical.flex
+widgets["mpd"]["percent"]:set_width(150)
+widgets["mpd"]["percent"]:set_height(7)
+widgets["mpd"]["percent"]:set_vertical(false)
+widgets["mpd"]["percent"]:set_color("#01FFF1")
+awful.widget.layout.margins[widgets["mpd"]["percent"].widget] = { top = 5, right = 6 }
+
+timers["mpd"] = timer({ timeout = 5 })
+timers["mpd"]:add_signal("timeout", function()
+    local m = musicParse("mpc ")
+    if m["song"] ~= "" then widgets["mpd"]["song"].text = m["state"] .. ": " .. m["song"]
+    else widgets["mpd"]["song"].text = m["state"]
+    end
+    widgets["mpd"]["album"].text = m["album"]
+    if m["timing"] ~= "" then widgets["mpd"]["timing"].text = "(" .. m["timing"] .. ") "
+    else widgets["mpd"]["timing"].text = ""
+    end
+    widgets["mpd"]["percent"]:set_value( tonumber(m["percent"])/100 )
+end)
+timers["mpd"]:start()
+timers["mpd"]:emit_signal("timeout")

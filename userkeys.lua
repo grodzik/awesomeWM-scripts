@@ -1,21 +1,8 @@
-function cmdMusic(cmd)
-    local f = io.popen(cmd .. " -f 'title: [[%artist% - %title%]|%file%]'")
-    local song, timing, percent, state
-    for line in f:lines() do
-        if string.match(line, "^title: (.+)") then
-            song = string.match(line, "^title: (.+)")
-        elseif string.match(line, "[[](%w+)[]]") then
-            state, timing, percent = string.match(line, "[[](%w+)[]]%s+#%d+/%d+%s+([^%s]+)%s+[(]([^%s]+)[)]")
-        end
-    end
-    if state == "playing" then
-        state = "<span foreground=\"#00ff00\">" .. state .. "</span>"
-    else
-        state = "<span foreground=\"#ffff00\">" .. state .. "</span>"
-    end
+function notifyMusic(cmd)
+    music = musicParse(cmd)
     remove_notification("mpd");
-    add_notification("mpd", { timeout = 5, title = awful.util.linewrap(song, 50, 0),
-                     text = string.format("State: %s\nTiming: %s\nPercentage: %s", state, timing, percent),
+    add_notification("mpd", { timeout = 5, title = awful.util.linewrap(music["song"], 50, 0),
+                     text = string.format("State: %s\nTiming: %s\nPercentage: %s", music["state"], music["timing"], music["percent"] .. "%"),
                      width = 350 })
 end
 
@@ -32,7 +19,7 @@ globalkeys = awful.util.table.join(
             awful.util.spawn_with_shell("xclip -o | xclip -i -selection clipboard")
         end),
         awful.key({ modkey, }, "Return", 
-            function() mainmenu:show(true)    end),
+            function() mainmenu:show({keygrabber=true})    end),
         awful.key({ modkey, }, "Up",
             function ()
                 awful.client.focus.byidx( 1)
@@ -91,7 +78,9 @@ globalkeys = awful.util.table.join(
                 awful.util.spawn(terminal .. terminal_title_param .. " WICD -e wicd-curses") 
             end),
         awful.key({ modkey, }, "u",
-            function () awful.util.spawn_with_shell(os.getenv("HOME") .. "/binarki/uzblb >> " .. os.getenv("HOME") .. "/.uzbl-errors 2>&1") end),
+            function () awful.util.spawn_with_shell("uzbl-browser >> " .. os.getenv("HOME") .. "/.uzbl-errors 2>&1") end),
+        awful.key({ modkey, }, "w",
+            function () awful.util.spawn_with_shell("luakit >> " .. os.getenv("HOME") .. "/.luakit-errors 2>&1") end),
         awful.key({ modkey, }, "e",
             function () 
                 awful.tag.viewonly(tags[1][3])
@@ -116,7 +105,7 @@ globalkeys = awful.util.table.join(
             function () 
                 awful.tag.viewonly(tags[1][4])
                 -- focus_or_create("MUTT", terminal .. terminal_title_param .. " MUTT -e \"sleep 0.2; l=0; for x in `find ${HOME}/.maildir -type d -iname \"new\"`; do if [ `ls $x|wc -l` != 0 ]; then mutt -Z; l=1; break; fi; done; [ $l -eq 1 ] || mutt\"")
-                focus_or_create("MUTT", terminal .. terminal_title_param .. " MUTT -e mutt")
+                focus_or_create("Claws Mail", "claws-mail")
             end),
         awful.key({ modkey, }, "r",
             function () awesome.restart() end),
@@ -143,15 +132,15 @@ globalkeys = awful.util.table.join(
             end),
         awful.key({  }, "XF86AudioNext",
             function ()
-                cmdMusic("mpc next ")
+                notifyMusic("mpc next ")
             end),
         awful.key({  }, "XF86AudioPrev",
             function ()
-                cmdMusic("mpc prev ")
+                notifyMusic("mpc prev ")
             end),
         awful.key({  }, "XF86AudioPlay",
             function ()
-                cmdMusic("mpc toggle ")
+                notifyMusic("mpc toggle ")
             end),
         awful.key({  }, "XF86AudioStop",
             function ()
@@ -159,27 +148,27 @@ globalkeys = awful.util.table.join(
             end),
         awful.key({ modkey,  }, "/",
             function ()
-                cmdMusic("mpc ")
+                notifyMusic("mpc ")
             end),
         awful.key({ modkey, }, "F9", 
             function ()
-                cmdMusic("mpc clear -q; mpc -q load metal; mpc play")
+                notifyMusic("mpc clear -q; mpc -q load metal; mpc play")
             end),
         awful.key({ modkey, }, "F10", 
             function ()
-                cmdMusic("mpc clear -q; mpc -q load queen; mpc play")
+                notifyMusic("mpc clear -q; mpc -q load queen; mpc play")
             end),
         awful.key({ modkey, }, "F11", 
             function ()
-                cmdMusic("mpc clear -q; mpc -q load ulubione; mpc play")
+                notifyMusic("mpc clear -q; mpc -q load ulubione; mpc play")
             end),
         awful.key({ modkey, }, "F12", 
             function ()
-                cmdMusic("mpc clear -q; mpc -q load radiozet; mpc play")
+                notifyMusic("mpc clear -q; mpc -q load radiozet; mpc play")
             end),
         awful.key({  }, "Print",
             function ()
-                os.execute("import -window root screen.png")
+                os.execute("import -window root screen-`date +%s`.png")
             end),
         awful.key({ modkey, }, "o",
             function ()

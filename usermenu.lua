@@ -25,19 +25,23 @@ virtualmenu = {
 
 officemenu = {
     { "&Acrobat Reader", "acroread" },
-    { "Writer", "oowriter" },
-    { "Calc", "oocalc" },
-    { "Impress", "ooimpres" },
-    { "Math", "oomath" },
-    { "Draw", "oodraw" }, 
-    { "Office", "ooffice" },
-    { "Base", "oobase" }
+    { "AbiWord", "abiword" },
+    { "Gnumeric", "gnumeric" },
+    { "Imposter", "imposter" }
+--    { "Writer", "oowriter" },
+--    { "Calc", "oocalc" },
+--    { "Impress", "ooimpres" },
+--    { "Math", "oomath" },
+--    { "Draw", "oodraw" }, 
+--    { "Office", "ooffice" },
+--    { "Base", "oobase" }
 }
 
 multimediamenu = {
     { "Gimp", "gimp" },
     { "Gqview", "gqview" },
-    { "XFBurn", "xfburn" }
+    { "XFBurn", "xfburn" },
+    { "Blueman Manager", "blueman-manager" }
 }
 
 gamesmenu = {
@@ -46,7 +50,9 @@ gamesmenu = {
     { "Atomic Tanks", function () game_start("atanks") end },
 --    { "Diablo 2: LoD", function () game_start("wine start /unix \"/home/grodzik/.wine/drive_c/Diablo II/Diablo II.exe\"") end },
     { "Simutrans", function () game_start("simutrans") end },
-    { "Wesnoth", function () game_start("wesnoth") end }
+    { "UltraStar Delux", function () game_start("ultrastardx") end },
+    { "Wesnoth", function () game_start("wesnoth") end },
+    { "Wormux", function () game_start("wormux") end }
 }
 
 awesomemenu = {
