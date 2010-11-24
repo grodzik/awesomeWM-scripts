@@ -442,20 +442,39 @@ widgets["curtag"].layout = awful.widget.layout.horizontal.leftright
 widgets["curtag"].align = "left"
 widgets["curtag"].text = " " .. awful.tag.selected().name .. ":" .. #awful.tag.selected():clients() .. " "
 
-widgets["mail"] = widget({ type = "textbox" })
-widgets["mail"].layout = awful.widget.layout.horizontal.leftright
-widgets["mail"].align = "left"
-widgets["mail"].text = ""
+widgets["mail"] = widget({ type = "imagebox" })
+widgets["mail"].image = image(data_dir .. "/grodzik/images/mail.png")
+
+widgets["mailtext"] = widget({ type = "textbox" })
+widgets["mailtext"].layout = awful.widget.layout.horizontal.leftright
+widgets["mailtext"].align = "left"
+widgets["mailtext"].text = nil
 
 timers["mail"] = timer({ timeout = 60 })
 timers["mail"]:add_signal("timeout", function()
     local file = io.popen(os.getenv("HOME") .. "/binarki/countmail.sh")
     local m = file:read("*a")
     file:close()
-    widgets["mail"].text = m
+    if m == "0" and widgets["mailtext"].text ~= nil then
+        widgets["mail"].image = image(data_dir .. "/grodzik/images/mail.png")
+        widgets["mailtext"].text = nil
+    elseif m ~= "0" and widgets["mailtext"].text == nil then
+        widgets["mail"].image = image(data_dir .. "/grodzik/images/mail-new.png")
+        widgets["mailtext"].text = string.match(m, "^(%d+) ")
+    elseif m ~= "0" and widgets["mailtext"].text ~= nil then
+        widgets["mailtext"].text = string.match(m, "^(%d+) ")
+    end
+--    widgets["mail"].text = m
 end)
 timers["mail"]:start()
 timers["mail"]:emit_signal("timeout")
+
+widgets["mail"]:add_signal("mouse::enter", function()
+    mail_show(0)
+end)
+widgets["mail"]:add_signal("mouse::leave", function()
+    remove_notification("mail_stats")
+end)
 
 widgets["mpd"] = {}
 widgets["mpd"]["song"] = widget({ type = "textbox" })

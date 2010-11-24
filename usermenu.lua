@@ -39,6 +39,7 @@ officemenu = {
 
 multimediamenu = {
     { "Gimp", "gimp" },
+    { "Shotwell", "shotwell" },
     { "Gqview", "gqview" },
     { "XFBurn", "xfburn" },
     { "Blueman Manager", "blueman-manager" }
@@ -52,7 +53,8 @@ gamesmenu = {
     { "Simutrans", function () game_start("simutrans") end },
     { "UltraStar Delux", function () game_start("ultrastardx") end },
     { "Wesnoth", function () game_start("wesnoth") end },
-    { "Wormux", function () game_start("wormux") end }
+    { "Wormux", function () game_start("wormux") end },
+    { "Hedgewars", function () game_start("hedgewars") end }
 }
 
 awesomemenu = {

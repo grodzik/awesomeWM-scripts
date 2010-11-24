@@ -73,6 +73,10 @@ globalkeys = awful.util.table.join(
             function () 
                 awful.util.spawn(terminal .. terminal_title_param .. " RTORRENT -e screen -r rtorrent") 
             end),
+        awful.key({ modkey, "Mod1" }, "r",
+            function () 
+                awful.util.spawn(terminal .. terminal_title_param .. " RSGET.PL -e screen -r rsget") 
+            end),
         awful.key({ modkey, "Control"}, "w",
             function () 
                 awful.util.spawn(terminal .. terminal_title_param .. " WICD -e wicd-curses") 
@@ -105,7 +109,7 @@ globalkeys = awful.util.table.join(
             function () 
                 awful.tag.viewonly(tags[1][4])
                 -- focus_or_create("MUTT", terminal .. terminal_title_param .. " MUTT -e \"sleep 0.2; l=0; for x in `find ${HOME}/.maildir -type d -iname \"new\"`; do if [ `ls $x|wc -l` != 0 ]; then mutt -Z; l=1; break; fi; done; [ $l -eq 1 ] || mutt\"")
-                focus_or_create("Claws Mail", "claws-mail")
+                focus_or_create("MUTT", terminal .. terminal_title_param .. " MUTT -e mutt")
             end),
         awful.key({ modkey, }, "r",
             function () awesome.restart() end),

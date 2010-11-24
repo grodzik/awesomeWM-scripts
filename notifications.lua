@@ -372,3 +372,14 @@ function mem_show(tout)
         )
     add_notification("mem_stats", { text = mem, timeout  = tout, font = "monospace"})
 end
+
+function mail_show(tout)
+    remove_notification("mail_stats")
+    local file = io.popen(os.getenv("HOME") .. "/binarki/countmail.sh")
+    local mail = file:read("*a")
+    file:close()
+    if mail ~= "0" then
+        mail = "total:" .. string.gsub(mail, " ", "\n")
+        add_notification("mail_stats", { text = mail, timeout  = tout, font = "monospace", position = "top_left" })
+    end
+end

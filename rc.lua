@@ -135,11 +135,14 @@ for s = 1, screen.count() do
     widgets["tasklist"][s].layout = awful.widget.layout.horizontal.flex
 
     -- Create the wibox
-    mywibox[s] = awful.wibox({ position = "top", screen = s, height = 19 })
+    mywibox[s] = awful.wibox({ position = "top", screen = s, height = 20 })
     -- Add widgets to the wibox - order matters
     mywibox[s].widgets = { 
         { 
             widgets["layoutbox"][s], 
+            widgets["mail"],
+            widgets["mailtext"],
+            widgets["systray"],
             widgets["curtag"],
             widgets["prompt"][s], 
             layout = awful.widget.layout.horizontal.leftright 
@@ -179,14 +182,12 @@ for s = 1, screen.count() do
     }
 end
 -- }}}
-second_wibox = awful.wibox({ position = "bottom", screen = 1, height = 19 })
+second_wibox = awful.wibox({ position = "bottom", screen = 1, height = 20 })
 second_wibox.widgets = {
-    widgets["systray"],
     widgets["mpd"]["song"],
     widgets["mpd"]["album"],
     widgets["mpd"]["timing"],
     widgets["mpd"]["percent"],
-    widgets["mail"],
     layout = awful.widget.layout.horizontal.leftright
 }
 
