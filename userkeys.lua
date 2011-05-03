@@ -3,14 +3,32 @@ function notifyMusic(cmd)
     remove_notification("mpd");
     add_notification("mpd", { timeout = 5, title = awful.util.linewrap(music["song"], 50, 0),
                      text = string.format("State: %s\nTiming: %s\nPercentage: %s", music["state"], music["timing"], music["percent"] .. "%"),
-                     width = 350 })
+                     width = 350, icon = "/usr/share/icons/gentoo/l33t/l33t_MED_mplayer3.png" })
+end
+
+
+function calculator()
+    awful.prompt.run({  text = val and tostring(val),
+    selectall = true,
+    prompt = "<span color='#00A5AB'>Calc:</span> " },
+    widgets["prompt"][mouse.screen].widget,
+    function(expr)
+        awful.util.eval("val=" .. expr)
+        naughty.notify({ text = expr .. ' = <span color="white">' .. val .. "</span>",
+        timeout = 10,
+        run = function() 
+            local f = io.popen("echo -n ".. val .. " | xsel -i -b && echo -n " .. val .. "|xsel -i -p && echo -n "..val.."|xsel -i -s")
+            f:close() 
+        end, })
+    end,
+    nil, awful.util.getdir("cache") .. "/calc")
 end
 
 --- {{{ Keybindings
 val = nil
 globalkeys = awful.util.table.join(
-        awful.key({ modkey, }, "Left",   awful.tag.viewprev       ),
-        awful.key({ modkey, }, "Right",  awful.tag.viewnext       ),
+        awful.key({ modkey, }, "Next",   awful.tag.viewprev       ),
+        awful.key({ modkey, }, "Prior",  awful.tag.viewnext       ),
         awful.key({ modkey, }, "0", function ()
             awful.tag.viewnone()
             widgets["curtag"].text = " zero"
@@ -20,12 +38,14 @@ globalkeys = awful.util.table.join(
         end),
         awful.key({ modkey, }, "Return", 
             function() mainmenu:show({keygrabber=true})    end),
-        awful.key({ modkey, }, "Up",
+        awful.key({ }, "Menu", 
+            function() mainmenu:show({keygrabber=true})    end),
+        awful.key({ modkey, "Control" }, "Up",
             function ()
                 awful.client.focus.byidx( 1)
                 if client.focus then client.focus:raise() end
             end),
-        awful.key({ modkey, }, "Down",
+        awful.key({ modkey, "Control" }, "Down",
             function ()
                 awful.client.focus.byidx(-1)
                 if client.focus then client.focus:raise() end
@@ -46,13 +66,13 @@ globalkeys = awful.util.table.join(
             function () awful.layout.inc(layouts,  1) end),
         awful.key({ modkey, "Mod1" }, "space", 
             function () awful.layout.inc(layouts, -1) end),
-        awful.key({ modkey, "Control" }, "Left",
+        awful.key({ modkey, }, "Left",
             function () awful.client.focus.bydirection("left") end),
-        awful.key({ modkey, "Control" }, "Right",
+        awful.key({ modkey, }, "Right",
             function () awful.client.focus.bydirection("right") end),
-        awful.key({ modkey, "Control" }, "Up",
+        awful.key({ modkey, }, "Up",
             function () awful.client.focus.bydirection("up") end),
-        awful.key({ modkey, "Control" }, "Down",
+        awful.key({ modkey, }, "Down",
             function () awful.client.focus.bydirection("down") end),
         awful.key({ modkey, "Mod1" }, "Up",
             function () awful.tag.incnmaster( 1) end),
@@ -95,7 +115,7 @@ globalkeys = awful.util.table.join(
                 awful.tag.viewonly(tags[1][3])
                 focus_or_create("IRSSI", terminal .. terminal_title_param .. " IRSSI -e screen -R -S IRSSI -t IRSSI irssi") 
             end),
-        awful.key({ modkey, "Control" }, "m",
+        awful.key({ }, "XF86Search",
             function () 
                 awful.tag.viewonly(tags[1][5])
                 focus_or_create("MUSIC", terminal .. terminal_title_param .. " MUSIC -e ncmpcpp") 
@@ -105,23 +125,25 @@ globalkeys = awful.util.table.join(
 --                awful.tag.viewonly(tags[1][3])
                 focus_or_create("firefox", "firefox") 
             end),
-        awful.key({ modkey, }, "m",
+--        awful.key({ modkey, }, "m",
+        awful.key({ }, "XF86Mail",
             function () 
                 awful.tag.viewonly(tags[1][4])
                 -- focus_or_create("MUTT", terminal .. terminal_title_param .. " MUTT -e \"sleep 0.2; l=0; for x in `find ${HOME}/.maildir -type d -iname \"new\"`; do if [ `ls $x|wc -l` != 0 ]; then mutt -Z; l=1; break; fi; done; [ $l -eq 1 ] || mutt\"")
                 focus_or_create("MUTT", terminal .. terminal_title_param .. " MUTT -e mutt")
+                -- focus_or_create("Thunderbird", "thunderbird")
             end),
         awful.key({ modkey, }, "r",
             function () awesome.restart() end),
         awful.key({  }, "XF86AudioRaiseVolume",
             function ()
                 remove_notification("volume");
-                add_notification("volume", { timout = 5, text = io.popen("echo -n `amixer -c 0 sset PCM 5%+|sed -n 's/.*Front Left: Playback [0-9]* \\[\\([0-9]*\\)\\%\\] .*/Volume: \\1%/p'`"):read("*a") })
+                add_notification("volume", { timout = 5, text = io.popen("echo -n `amixer -c 0 sset Master 5%+|sed -n 's/.*Front Left: Playback [0-9]* \\[\\([0-9]*\\)\\%\\] .*/Volume: \\1%/p'`"):read("*a") })
             end),
         awful.key({  }, "XF86AudioLowerVolume",
             function ()
                 remove_notification("volume");
-                add_notification("volume", { timeout = 5, text = io.popen("echo -n `amixer -c 0 sset PCM 5%-|sed -n 's/.*Front Left: Playback [0-9]* \\[\\([0-9]*\\)\\%\\] .*/Volume: \\1%/p'`"):read("*a") })
+                add_notification("volume", { timeout = 5, text = io.popen("echo -n `amixer -c 0 sset Master 5%-|sed -n 's/.*Front Left: Playback [0-9]* \\[\\([0-9]*\\)\\%\\] .*/Volume: \\1%/p'`"):read("*a") })
             end),
         awful.key({  }, "XF86AudioMute",
             function ()
@@ -185,23 +207,11 @@ globalkeys = awful.util.table.join(
                   awful.util.eval, nil,
                   awful.util.getdir("cache") .. "/history_eval")
               end),
-        awful.key({ modkey, }, "k", 
-            function ()
-                awful.prompt.run({  text = val and tostring(val),
-                selectall = true,
-                prompt = "<span color='#00A5AB'>Calc:</span> " },
-                widgets["prompt"][mouse.screen].widget,
-                function(expr)
-                    awful.util.eval("val=" .. expr)
-                    naughty.notify({ text = expr .. ' = <span color="white">' .. val .. "</span>",
-                    timeout = 10,
-                    run = function() 
-                        local f = io.popen("echo -n ".. val .. " | xsel -i -b && echo -n " .. val .. "|xsel -i -p && echo -n "..val.."|xsel -i -s")
-                        f:close() 
-                    end, })
-                end,
-                nil, awful.util.getdir("cache") .. "/calc")
-            end),
+
+              -- Calculator mappings
+        awful.key({ modkey, }, "k", function () calculator() end),
+        awful.key({ }, "XF86Calculator" , function () calculator() end),
+
         awful.key({ modkey, }, "n",
             function ()
                 add_event()

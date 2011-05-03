@@ -67,7 +67,7 @@ awesomemenu = {
 mainmenu = awful.menu({
         items = { 
             { "&xterm", terminal },
-            { "&root", terminal .. " -e su -" },
+            { "&root", terminal .. " -e su - -c 'tmux -2'" },
             { "&Programming", programmingmenu },
             { "&Net", netmenu },
             { "&Multimedia", multimediamenu },

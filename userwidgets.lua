@@ -1,37 +1,3 @@
-function musicParse(cmd)
-    local f = io.popen(cmd .. " -f 'title: [[%artist% - %title%[ (%comment%)][ /%album%/]]|%file%]'")
-    local song, timing, percent, state, album
-    song = ""
-    timing = ""
-    state = ""
-    album = ""
-    percent = "0"
-    for line in f:lines() do
-        if string.match(line, "^title: (.+) /(.+)/") then
-            song, album = string.match(line, "^title: (.+) /(.+)/")
-        elseif string.match(line, "^title: (.+)") then
-            song = string.match(line, "^title: (.+)")
-        elseif string.match(line, "[[](%w+)[]]") then
-            state, timing, percent = string.match(line, "[[](%w+)[]]%s+#%d+/%d+%s+([^%s]+)%s+[(]([%d]+)")
-        end
-    end
-    f:close()
-    if state == "playing" then
-        state = "<span foreground=\"#00ff00\">" .. state .. "</span>"
-    elseif state == "paused" then
-        state = "<span foreground=\"#ffff00\">" .. state .. "</span>"
-    else
-        state = "<span foreground=\"#ff0000\">stoped</span>"
-    end
-    local music = {}
-    music["song"] = escape(song)
-    music["album"] = escape(album)
-    music["state"] = state
-    music["timing"] = timing
-    music["percent"] = percent
-    return music
-end
-
 
 cpus_old = {}
 widgets = {}
@@ -476,41 +442,51 @@ widgets["mail"]:add_signal("mouse::leave", function()
     remove_notification("mail_stats")
 end)
 
-widgets["mpd"] = {}
-widgets["mpd"]["song"] = widget({ type = "textbox" })
-widgets["mpd"]["song"].layout = awful.widget.layout.horizontal.leftright
-widgets["mpd"]["song"].align = "center"
-widgets["mpd"]["song"].text = ""
-widgets["mpd"]["song"].width = 400
-widgets["mpd"]["album"] = widget({ type = "textbox" })
-widgets["mpd"]["album"].layout = awful.widget.layout.horizontal.leftright
-widgets["mpd"]["album"].align = "center"
-widgets["mpd"]["album"].text = ""
-widgets["mpd"]["album"].width = 200
-widgets["mpd"]["timing"] = widget({ type = "textbox" })
-widgets["mpd"]["timing"].layout = awful.widget.layout.horizontal.leftright
-widgets["mpd"]["timing"].align = "center"
-widgets["mpd"]["timing"].text = ""
-widgets["mpd"]["timing"].width = 80
-widgets["mpd"]["percent"] = awful.widget.progressbar()
---widgets["mpd"]["percent"].layout = awful.widget.layout.vertical.flex
-widgets["mpd"]["percent"]:set_width(150)
-widgets["mpd"]["percent"]:set_height(7)
-widgets["mpd"]["percent"]:set_vertical(false)
-widgets["mpd"]["percent"]:set_color("#01FFF1")
-awful.widget.layout.margins[widgets["mpd"]["percent"].widget] = { top = 5, right = 6 }
+widgets["mpd"] = widget({ type = "imagebox" })
+widgets["mpd"].image = image(data_dir .. "/grodzik/images/music_stoped.png")
+-- widgets["mpd"]["song"] = widget({ type = "textbox" })
+-- widgets["mpd"]["song"].layout = awful.widget.layout.horizontal.leftright
+-- widgets["mpd"]["song"].align = "center"
+-- widgets["mpd"]["song"].text = ""
+-- widgets["mpd"]["song"].width = 400
+-- widgets["mpd"]["album"] = widget({ type = "textbox" })
+-- widgets["mpd"]["album"].layout = awful.widget.layout.horizontal.leftright
+-- widgets["mpd"]["album"].align = "center"
+-- widgets["mpd"]["album"].text = ""
+-- widgets["mpd"]["album"].width = 200
+-- widgets["mpd"]["timing"] = widget({ type = "textbox" })
+-- widgets["mpd"]["timing"].layout = awful.widget.layout.horizontal.leftright
+-- widgets["mpd"]["timing"].align = "center"
+-- widgets["mpd"]["timing"].text = ""
+-- widgets["mpd"]["timing"].width = 80
+-- widgets["mpd"]["percent"] = awful.widget.progressbar()
+-- --widgets["mpd"]["percent"].layout = awful.widget.layout.vertical.flex
+-- widgets["mpd"]["percent"]:set_width(150)
+-- widgets["mpd"]["percent"]:set_height(7)
+-- widgets["mpd"]["percent"]:set_vertical(false)
+-- widgets["mpd"]["percent"]:set_color("#01FFF1")
+-- awful.widget.layout.margins[widgets["mpd"]["percent"].widget] = { top = 5, right = 6 }
 
 timers["mpd"] = timer({ timeout = 5 })
 timers["mpd"]:add_signal("timeout", function()
     local m = musicParse("mpc ")
-    if m["song"] ~= "" then widgets["mpd"]["song"].text = m["state"] .. ": " .. m["song"]
-    else widgets["mpd"]["song"].text = m["state"]
+    if widgets["mpd"].image ~= image(data_dir .. "/grodzik/images/music_stoped.png") and m["state"] == "stopped"
+    then
+        widgets["mpd"].image = image(data_dir .. "/grodzik/images/music_stoped.png")
+    elseif widgets["mpd"].image ~= image(data_dir .. "/grodzik/images/music_paused.png") and m["state"] == "paused"
+    then
+        widgets["mpd"].image = image(data_dir .. "/grodzik/images/music_paused.png")
+    elseif widgets["mpd"].image ~= image(data_dir .. "/grodzik/images/music_playing.png") and m["state"] == "playing"
+    then
+        widgets["mpd"].image = image(data_dir .. "/grodzik/images/music_playing.png")
     end
-    widgets["mpd"]["album"].text = m["album"]
-    if m["timing"] ~= "" then widgets["mpd"]["timing"].text = "(" .. m["timing"] .. ") "
-    else widgets["mpd"]["timing"].text = ""
-    end
-    widgets["mpd"]["percent"]:set_value( tonumber(m["percent"])/100 )
 end)
 timers["mpd"]:start()
 timers["mpd"]:emit_signal("timeout")
+
+widgets["mpd"]:add_signal("mouse::enter", function()
+    music_stats(0)
+end)
+widgets["mpd"]:add_signal("mouse::leave", function()
+    remove_notification("music_stats")
+end)

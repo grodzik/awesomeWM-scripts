@@ -68,6 +68,40 @@ function focus_or_create(str, cmd)
     awful.util.spawn(cmd)
 end
 
+function musicParse(cmd)
+    local f = io.popen(cmd .. " -f 'title: [[%artist% - %title%[ (%comment%)][ /%album%/]]|%file%]'")
+    local song, timing, percent, state, album
+    song = ""
+    timing = ""
+    state = ""
+    album = ""
+    percent = "0"
+    for line in f:lines() do
+        if string.match(line, "^title: (.+) /(.+)/") then
+            song, album = string.match(line, "^title: (.+) /(.+)/")
+        elseif string.match(line, "^title: (.+)") then
+            song = string.match(line, "^title: (.+)")
+        elseif string.match(line, "[[](%w+)[]]") then
+            state, timing, percent = string.match(line, "[[](%w+)[]]%s+#%d+/%d+%s+([^%s]+)%s+[(]([%d]+)")
+        end
+    end
+    f:close()
+    if state == "playing" then
+        state = state
+    elseif state == "paused" then
+        state = state
+    else
+        state = "stopped"
+    end
+    local music = {}
+    music["song"] = escape(song)
+    music["album"] = escape(album)
+    music["state"] = state
+    music["timing"] = timing
+    music["percent"] = percent
+    return music
+end
+
 -- Table of layouts to cover with awful.layout.inc, order matters.
 layouts =
 {
@@ -87,10 +121,11 @@ layouts =
 tags = {}
 for s = 1, screen.count() do
     -- Each screen has its own tag table.
-    tags[s] = awful.tag({ "terms", "web", "im", "mail", "media", "terms2", "vm", "d8", "d9" }, s, layouts[3])
+    tags[s] = awful.tag({ "terms", "web", "im", "mail", "media", "terms2", "vm", "d8", "term3" }, s, layouts[3])
 end
-awful.tag.setproperty(tags[1][1], "mwfact", 0.7)
-awful.tag.setproperty(tags[1][1], "nmaster", 2)
+awful.tag.setproperty(tags[1][1], "mwfact", 0.6)
+-- awful.tag.setproperty(tags[1][1], "nmaster", 2)
+awful.tag.setproperty(tags[1][1], "layout", layouts[1])
 awful.tag.setproperty(tags[1][2], "mwfact", 0.9)
 awful.tag.setproperty(tags[1][2], "layout", layouts[5])
 awful.tag.setproperty(tags[1][3], "layout", layouts[5])
@@ -100,7 +135,7 @@ awful.tag.setproperty(tags[1][5], "layout", layouts[1])
 awful.tag.setproperty(tags[1][5], "ncol", 2)
 awful.tag.setproperty(tags[1][7], "layout", layouts[8])
 awful.tag.setproperty(tags[1][8], "layout", layouts[8])
-awful.tag.setproperty(tags[1][9], "layout", layouts[5])
+awful.tag.setproperty(tags[1][9], "layout", layouts[1])
 
 -- }}}
 
@@ -135,7 +170,7 @@ for s = 1, screen.count() do
     widgets["tasklist"][s].layout = awful.widget.layout.horizontal.flex
 
     -- Create the wibox
-    mywibox[s] = awful.wibox({ position = "top", screen = s, height = 20 })
+    mywibox[s] = awful.wibox({ position = "top", screen = s, height = 16 })
     -- Add widgets to the wibox - order matters
     mywibox[s].widgets = { 
         { 
@@ -175,6 +210,7 @@ for s = 1, screen.count() do
             widgets["uploadimage"],
             widgets["net_stat_up"],
             widgets["netimage"],
+            widgets["mpd"],
             layout = awful.widget.layout.horizontal.rightleft 
         }, 
         widgets["tasklist"][s], 
@@ -182,14 +218,14 @@ for s = 1, screen.count() do
     }
 end
 -- }}}
-second_wibox = awful.wibox({ position = "bottom", screen = 1, height = 20 })
-second_wibox.widgets = {
-    widgets["mpd"]["song"],
-    widgets["mpd"]["album"],
-    widgets["mpd"]["timing"],
-    widgets["mpd"]["percent"],
-    layout = awful.widget.layout.horizontal.leftright
-}
+-- second_wibox = awful.wibox({ position = "bottom", screen = 1, height = 20 })
+-- second_wibox.widgets = {
+--     widgets["mpd"]["song"],
+--     widgets["mpd"]["album"],
+--     widgets["mpd"]["timing"],
+--     widgets["mpd"]["percent"],
+--     layout = awful.widget.layout.horizontal.leftright
+-- }
 
 clientkeys = awful.util.table.join( 
                 awful.key({ modkey, "Shift" }, "f", 
@@ -236,7 +272,11 @@ awful.rules.rules = {
             switchtotag = tags[1][5] } },
     { rule = { class = "Claws Mail" }, properties = {
             tag = tags[1][4],
-            switchtotag = tags[1][5] } },
+            switchtotag = tags[1][4] } },
+    { rule = { class = "Thunderbird" }, properties = {
+            tag = tags[1][4],
+            floating = "true",
+            switchtotag = tags[1][4] } },
     { rule = { class = "wine" }, properties = {
                 floating = true } },
     { rule = { name = "EKG2" }, properties = {
@@ -245,7 +285,7 @@ awful.rules.rules = {
     { rule = { name = "IRSSI" }, properties = {
             tag = tags[1][3],
             switchtotag = tags[1][3] } },
-    { rule = { name = ".*Simutrans.*" }, properties = {
+    { rule = { class = ".*Simutrans.*" }, properties = {
                 floating = false } },
     { rule = { name = ".*Wine.*" }, properties = {
                 floating = true } },
@@ -254,6 +294,14 @@ awful.rules.rules = {
             switchtotag = tags[1][7] } },
     { rule = { name = ".*UltraStar Delux.*" }, properties = {
             tag = tags[1][8],
+            switchtotag = tags[1][8] } },
+    { rule = { name = ".*stepmania.*" }, properties = {
+            tag = tags[1][8],
+            floating = true,
+            switchtotag = tags[1][8] } },
+    { rule = { name = ".*StepMania.*" }, properties = {
+            tag = tags[1][8],
+            floating = true,
             switchtotag = tags[1][8] } },
     -- Set Firefox to always map on tags number 2 of screen 1.  { rule = {
     -- class = "Firefox" }, properties = { tag = tags[1][2] } },
@@ -281,15 +329,15 @@ end)
 
 client.add_signal("list", function (c)
     widgets["curtag"].text = " " .. awful.tag.selected().name .. ":" .. #awful.tag.selected():clients() .. " "
-    if awful.tag.selected() == tags[1][1] then
-        if #tags[1][1]:clients() > 2 then
-            awful.tag.setproperty(tags[1][1], "nmaster", 2)
-            awful.tag.setproperty(tags[1][1], "mwfact", 0.7)
-        else
-            awful.tag.setproperty(tags[1][1], "nmaster", 1)
-            awful.tag.setproperty(tags[1][1], "mwfact", 0.6)
-        end
-    end
+--     if awful.tag.selected() == tags[1][1] then
+--         if #tags[1][1]:clients() > 2 then
+--             awful.tag.setproperty(tags[1][1], "nmaster", 2)
+--             awful.tag.setproperty(tags[1][1], "mwfact", 0.7)
+--         else
+--             awful.tag.setproperty(tags[1][1], "nmaster", 1)
+--             awful.tag.setproperty(tags[1][1], "mwfact", 0.6)
+--         end
+--     end
 end)
 client.add_signal("focus", function(c) c.border_color = beautiful.border_focus end)
 client.add_signal("unfocus", function(c) c.border_color = beautiful.border_normal end)
@@ -300,15 +348,15 @@ for s = 1, screen.count() do
             if awful.tag.selected() ~= nil then
                 widgets["curtag"].text = " " .. awful.tag.selected().name .. ":" .. #awful.tag.selected():clients() .. " "
             end
-            if s == 1 and t == 1 then
-                if #tags[s][t]:clients() > 2 then
-                    awful.tag.setproperty(tags[s][t], "nmaster", 2)
-                    awful.tag.setproperty(tags[s][t], "mwfact", 0.7)
-                else
-                    awful.tag.setproperty(tags[s][t], "nmaster", 1)
-                    awful.tag.setproperty(tags[s][t], "mwfact", 0.6)
-                end
-            end
+--             if s == 1 and t == 1 then
+--                 if #tags[s][t]:clients() > 2 then
+--                     awful.tag.setproperty(tags[s][t], "nmaster", 2)
+--                     awful.tag.setproperty(tags[s][t], "mwfact", 0.7)
+--                 else
+--                     awful.tag.setproperty(tags[s][t], "nmaster", 1)
+--                     awful.tag.setproperty(tags[s][t], "mwfact", 0.6)
+--                 end
+--             end
         end)
         tags[s][t]:add_signal("property::selected", function ()
             if awful.tag.selected() ~= nil then

@@ -35,7 +35,7 @@ function load_events()
             if date_events[y][month] == nil then
                 date_events[y][month] = {}
             end
-            date_events[y][month][#date_events[y][month]+1] = { day, month, y, etype, event }
+            date_events[y][month][#date_events[y][month]+1] = { day, month, y, etype, event, 1 }
         end
     end
     f:close()
@@ -166,7 +166,7 @@ end
 function delete_event()
     awful.prompt.run({ text = "", 
                      selectall = true,
-                     prompt = '<span color="red">Select day(date dd/mm/yyy): </span>', },
+                     prompt    = '<span color = "red">Select day(date dd/mm/yyy): </span>', },
                      widgets["prompt"][mouse.screen].widget,
                      function (expr)
                          newevent = expr
@@ -175,10 +175,10 @@ function delete_event()
                          end
                          local day, month, year = string.match(newevent, "([%d]+)[/.-]+([%d]+)[/.-]+([%d][%d][%d][%d])")
                          local str
-                         str = ""
-                         day = string.format("%2s", tonumber(day))
+                         str   = ""
+                         day   = string.format("%2s", tonumber(day))
                          month = string.format("%2s", tonumber(month))
-                         year = string.format("%4s", tonumber(year))
+                         year  = string.format("%4s", tonumber(year))
                          for key,val in pairs(date_events[year][month]) do
                              if tonumber(val[1]) == tonumber(day) then
                                  str = string.format('%s<span color="red">%s</span> - <span color="white">%s</span>\n', str, key, val[5])
@@ -188,17 +188,17 @@ function delete_event()
                              naughty.notify({ title = "Choose(from notification):", text = str, timeout = 10 })
                              awful.prompt.run({ text = "", 
                                              selectall = true,
-                                             prompt = '<span color="green">Select event: </span>', },
+                                             prompt    = '<span color = "green">Select event: </span>', },
                                              widgets["prompt"][mouse.screen].widget,
                                              function (expr)
                                                  if expr == "" or expr == nil then
                                                      return
                                                  end
                                                  local day, month, year = string.match(newevent, "([%d]+)[/.-]+([%d]+)[/.-]+([%d][%d][%d][%d])")
-                                                 day = string.format("%2s", tonumber(day))
+                                                 day   = string.format("%2s", tonumber(day))
                                                  month = string.format("%2s", tonumber(month))
-                                                 year = string.format("%4s", tonumber(year))
-                                                 expr = tonumber(expr)
+                                                 year  = string.format("%4s", tonumber(year))
+                                                 expr  = tonumber(expr)
                                                  if date_events[year][month][expr] ~= nil then
                                                      table.remove(date_events[year][month], expr)
                                                      save_events()
@@ -224,25 +224,40 @@ function add_notification(n, args)
     notifications[n] = naughty.notify( args )
 end
 
+function show_today_events()
+    if notifications["todayEvents"] == nil then
+        add_notification( "todayEvents", 
+        { text    = "test",
+          title   = "title",
+          timeout = 0,
+          width   = 300,
+          height  = 150,
+          run     = function ()
+              remove_notification("todayEvents")
+          end
+        } )
+    end
+end
+
 function add_calendar(inc_offset, tout)
-    local save_offset = offset
+    local save_offset               = offset
     remove_notification("calendar")
-    offset = save_offset + inc_offset
-    local datespec = os.date("*t")
-    datespec = datespec.year * 12 + datespec.month - 1 + offset
-    local month = string.format("%2s", datespec%12 + 1)
-    local year = string.format("%4s", math.floor(datespec / 12))
-    datespec = (datespec % 12 + 1) .. " " .. math.floor(datespec / 12)
-    local day = string.format("%2s", tonumber(os.date("%d")))
-    local cal = awful.util.pread("cal -m " .. datespec .. "| sed '2,$s/\\([ [:alnum:]]\\+ [ [:alnum:]]\\+ [ [:alnum:]]\\+ [ [:alnum:]]\\+ [ [:alnum:]]\\+ \\)\\([ [:alnum:]]\\+ \\)\\([ [:alnum:]]\\{2\\}\\)/<span color=\"white\">\\1<\\/span><span color=\"#00b609\">\\2<\\/span><span color=\"red\">\\3<\\/span>/'|sed '2,$s/\\([^0-9]\\+\\)\\(".. day .. "\\)\\([ <]\\{1\\}\\)/\\1<span color=\"cyan\">\\2<\\/span>\\3/g'")
-    cal = string.gsub(cal, "^%s*(.-)%s*$", "%1")
-    cal = string.gsub(cal, "([^\n]+)", string.format("%20s", "%1"), 1)
-    cal = string.gsub(cal, "\n([^\n]+)", string.format("\n%20s", "%1"))
+    offset                          = save_offset + inc_offset
+    local datespec                  = os.date("*t")
+    datespec                        = datespec.year * 12 + datespec.month - 1 + offset
+    local month                     = string.format("%2s", datespec%12 + 1)
+    local year                      = string.format("%4s", math.floor(datespec / 12))
+    datespec                        = (datespec % 12 + 1) .. " " .. math.floor(datespec / 12)
+    local day                       = string.format("%2s", tonumber(os.date("%d")))
+    local cal                       = awful.util.pread("cal -m " .. datespec .. "| sed '2,$s/\\([ [:alnum:]]\\+ [ [:alnum:]]\\+ [ [:alnum:]]\\+ [ [:alnum:]]\\+ [ [:alnum:]]\\+ \\)\\([ [:alnum:]]\\+ \\)\\([ [:alnum:]]\\{2\\}\\)/<span color = \"white\">\\1<\\/span><span color = \"#00b609\">\\2<\\/span><span color = \"red\">\\3<\\/span>/'|sed '2,$s/\\([^0-9]\\+\\)\\(".. day .. "\\)\\([ <]\\{1\\}\\)/\\1<span color = \"cyan\">\\2<\\/span>\\3/g'")
+    cal                             = string.gsub(cal, "^%s*(.-)%s*$", "%1")
+    cal                             = string.gsub(cal, "([^\n]+)", string.format("%20s", "%1"), 1)
+    cal                             = string.gsub(cal, "\n([^\n]+)", string.format("\n%20s", "%1"))
     local events, today, prev, tomorrow, future
-    today = ""
+    today    = ""
     tomorrow = ""
-    prev = ""
-    future = ""
+    prev     = ""
+    future   = ""
     if date_events[year] ~= nil then
         if date_events[year][month] ~= nil then
             for e = 1, #date_events[year][month] do
@@ -272,7 +287,7 @@ function add_calendar(inc_offset, tout)
     end
     events = string.format("%s%s%s%s", prev, today, tomorrow, future)
     if tonumber(month) == 12 then
-        year = string.format("%4s", tonumber(year)+1)
+        year  = string.format("%4s", tonumber(year)+1)
         month = string.format("%2s", 1)
     else
         month = string.format("%2s", tonumber(month)+1)
@@ -292,6 +307,7 @@ function add_calendar(inc_offset, tout)
         {text = string.format('<span font_desc="%s">Today is:\n%s</span>', "monospace", os.date("%a, %d %B %Y") .. "\n\n" .. cal .. events),
         timeout = tout, hover_timeout = 0.5,
     })
+    show_today_events()
 end
 
 function netcard_show(tout)
@@ -329,15 +345,15 @@ function netcard_show(tout)
         str = string.format('\n<span font="monospace">%15s: <span color="green">%s</span>\n%15s: <span color="yellow">%s</span>\n%15s: <span color="red">%s</span>\n%15s: <span color="white">%s</span></span>', "ESSID",essid or "-", "Quality", lq or "-", "Bit Rate", br or "-", "Access Point", ap or "-")
     end
     add_notification("netcard_stats", { text = string.format( 
-        '%s:\n<span font="monospace">%15s: <span color="gray">%s</span>\n%15s: <span color="green">%s</span>\n%15s: <span color="yellow">%s</span>\n%15s: <span color="cyan">%s</span></span>' .. str, net_active_dev, "MAC", mac or "-", "IP", ip or "-", "Mask", mask or "-", "Broadcast", broadcast or "-"), timeout = tout} )
+        '%s:\n<span font="monospace">%15s: <span color="gray">%s</span>\n%15s: <span color="green">%s</span>\n%15s: <span color="yellow">%s</span>\n%15s: <span color="cyan">%s</span></span>' .. str, net_active_dev, "MAC", mac or "-", "IP", ip or "-", "Mask", mask or "-", "Broadcast", broadcast or "-"), timeout = tout, icon = "/usr/share/icons/gentoo/l33t/l33t_DEV_network.png"} )
 
 end
 
 function disks_show(tout)
-    local f = io.popen("df -h", "r")
+    local f  = io.popen("df -h", "r")
     local ds
-    ds = ""
-    local i = 1
+    ds       = ""
+    local i  = 1
     remove_notification("disks_stats")
     for line in f:lines() do
         if i%2 == 0 then
@@ -348,7 +364,7 @@ function disks_show(tout)
         i = i + 1
     end
     f:close()
-    add_notification("disks_stats", { text = "<span font=\"monospace\">"..ds.."</span>", timeout = tout })
+    add_notification("disks_stats", { text = "<span font=\"monospace\">"..ds.."</span>", timeout = tout, icon = "/usr/share/icons/gentoo/l33t/l33t_DEV_gdiskfree.png" })
 end
 
 function add_worldtime(tout)
@@ -370,7 +386,7 @@ function mem_show(tout)
         "Used", math.floor((memory["swaptotal"] - memory["swapfree"]) / 1024),
         "Free", math.floor(memory["swapfree"] / 1024)
         )
-    add_notification("mem_stats", { text = mem, timeout  = tout, font = "monospace"})
+    add_notification("mem_stats", { text = mem, timeout  = tout, font = "monospace", icon = "/usr/share/icons/gentoo/l33t/l33t_DEV_memcpu.png"})
 end
 
 function mail_show(tout)
@@ -380,6 +396,17 @@ function mail_show(tout)
     file:close()
     if mail ~= "0" then
         mail = "total:" .. string.gsub(mail, " ", "\n")
-        add_notification("mail_stats", { text = mail, timeout  = tout, font = "monospace", position = "top_left" })
+        add_notification("mail_stats", { text = mail, timeout  = tout, font = "monospace", position = "top_left", icon = "/usr/share/icons/gentoo/l33t/l33t_MAI_envelope.png" })
     end
+end
+
+function music_stats(tout)
+    remove_notification("music_stats")
+    local m = musicParse("mpc ")
+    local song, album, timing, percent
+    song    = m["song"]
+    album   = m["album"]
+    timing  = m["timing"]
+    percent = m["percent"]
+    add_notification("music_stats", { text = string.format("Song: %s\nAlbum: %s\nTime: %s (%s%%)", song, album, timing, percent), timeout = tout, font = "monospace", position = "top_left" , icon = "/usr/share/icons/gentoo/l33t/l33t_MED_mplayer3.png"})
 end
