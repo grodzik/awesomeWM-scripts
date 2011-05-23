@@ -7,9 +7,42 @@ newmonth = os.date("%m")
 newyear = os.date("%Y")
 newetype = ""
 
+function remove_notification(n)
+    if notifications[n] ~= nil then
+        naughty.destroy(notifications[n])
+        notifications[n] = nil
+        offset = 0
+    end
+end
+
+function add_notification(n, args)
+    notifications[n] = naughty.notify( args )
+end
+
+function show_today_events()
+    if notifications["todayEvents"] == nil then
+        local d = os.date("*t")
+        local events = ""
+        local day = string.format("%2s", d.day)
+        local month = string.format("%2s", d.month)
+        local year = string.format("%4s", d.year)
+        for event = 1, #date_events[year][month], 1 do
+            if date_events[year][month][event][1] == day then
+                events = events .. "<br />" .. date_events[year][month][event][5] .. " (" .. date_events[year][month][event][4] .. ")"
+            end
+        end
+        add_notification( "todayEvents", 
+        { text    = events,
+          title   = "Today Events",
+          preset  = naughty.config.presets.critical
+        } )
+    end
+end
+
 function load_events()
     local f = io.open(data_dir .. "/date_events.txt", "r")
     local day, month, year, event, etype
+    local today_events = false
     for line in f:lines() do
         day, month, year, etype, event = string.match(line, "^\ *([%d]+)\ +([%d]+)\ +([%d]+)\ +([%w]+)\ +(.*)$")
         if tonumber(year) >= tonumber(os.date("%Y")) or ( tonumber(month) < tonumber(os.date("%m")) and tonumber(year) > tonumber(os.date("%Y"))) then
@@ -25,7 +58,7 @@ function load_events()
             date_events[year][month][#date_events[year][month]+1] = { day, month, year, etype, event }
             local d = os.date("*t")
             if tonumber(d.day) == tonumber(day) and tonumber(d.month) == tonumber(month) and tonumber(d.year) == tonumber(year) then
-                naughty.notify({ title = string.format('<span color="white">Today event:</span>'), text = event })
+                today_events = true
             end
         elseif etype == "r" then
             local y = string.format("%4s", tonumber(year)+1)
@@ -40,6 +73,9 @@ function load_events()
     end
     f:close()
     save_events()
+    if today_events == true then
+        show_today_events()
+    end
 end
 
 function save_events()
@@ -212,33 +248,6 @@ function delete_event()
                      nil)
 end
 
-function remove_notification(n)
-    if notifications[n] ~= nil then
-        naughty.destroy(notifications[n])
-        notifications[n] = nil
-        offset = 0
-    end
-end
-
-function add_notification(n, args)
-    notifications[n] = naughty.notify( args )
-end
-
-function show_today_events()
-    if notifications["todayEvents"] == nil then
-        add_notification( "todayEvents", 
-        { text    = "test",
-          title   = "title",
-          timeout = 0,
-          width   = 300,
-          height  = 150,
-          run     = function ()
-              remove_notification("todayEvents")
-          end
-        } )
-    end
-end
-
 function add_calendar(inc_offset, tout)
     local save_offset               = offset
     remove_notification("calendar")
@@ -307,7 +316,6 @@ function add_calendar(inc_offset, tout)
         {text = string.format('<span font_desc="%s">Today is:\n%s</span>', "monospace", os.date("%a, %d %B %Y") .. "\n\n" .. cal .. events),
         timeout = tout, hover_timeout = 0.5,
     })
-    show_today_events()
 end
 
 function netcard_show(tout)

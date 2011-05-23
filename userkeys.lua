@@ -6,6 +6,7 @@ function notifyMusic(cmd)
                      width = 350, icon = "/usr/share/icons/gentoo/l33t/l33t_MED_mplayer3.png" })
 end
 
+myfinder = awful.mouse.finder()
 
 function calculator()
     awful.prompt.run({  text = val and tostring(val),
@@ -28,6 +29,7 @@ end
 val = nil
 globalkeys = awful.util.table.join(
         awful.key({ modkey, }, "Next",   awful.tag.viewprev       ),
+        awful.key({ modkey, }, "g",   function () awful.mouse.finder.find(myfinder) end     ),
         awful.key({ modkey, }, "Prior",  awful.tag.viewnext       ),
         awful.key({ modkey, }, "0", function ()
             awful.tag.viewnone()
@@ -130,7 +132,7 @@ globalkeys = awful.util.table.join(
             function () 
                 awful.tag.viewonly(tags[1][4])
                 -- focus_or_create("MUTT", terminal .. terminal_title_param .. " MUTT -e \"sleep 0.2; l=0; for x in `find ${HOME}/.maildir -type d -iname \"new\"`; do if [ `ls $x|wc -l` != 0 ]; then mutt -Z; l=1; break; fi; done; [ $l -eq 1 ] || mutt\"")
-                focus_or_create("MUTT", terminal .. terminal_title_param .. " MUTT -e mutt")
+                focus_or_create("MUTT", terminal .. terminal_title_param .. " MUTT -e sh -c \"TERM='xterm-256color' mutt\"")
                 -- focus_or_create("Thunderbird", "thunderbird")
             end),
         awful.key({ modkey, }, "r",
@@ -138,23 +140,17 @@ globalkeys = awful.util.table.join(
         awful.key({  }, "XF86AudioRaiseVolume",
             function ()
                 remove_notification("volume");
-                add_notification("volume", { timout = 5, text = io.popen("echo -n `amixer -c 0 sset Master 5%+|sed -n 's/.*Front Left: Playback [0-9]* \\[\\([0-9]*\\)\\%\\] .*/Volume: \\1%/p'`"):read("*a") })
+                add_notification("volume", { timout = 5, text = io.popen(".local/share/bin/sound-ctl.sh up"):read("*a") })
             end),
         awful.key({  }, "XF86AudioLowerVolume",
             function ()
                 remove_notification("volume");
-                add_notification("volume", { timeout = 5, text = io.popen("echo -n `amixer -c 0 sset Master 5%-|sed -n 's/.*Front Left: Playback [0-9]* \\[\\([0-9]*\\)\\%\\] .*/Volume: \\1%/p'`"):read("*a") })
+                add_notification("volume", { timout = 5, text = io.popen(".local/share/bin/sound-ctl.sh down"):read("*a") })
             end),
         awful.key({  }, "XF86AudioMute",
             function ()
-                os.execute("amixer -c 0 set Master toggle mutt")
-                local on_off = io.popen("echo -n `amixer -c 0 get Master|sed -n 's/.*Front Left: Playback [0-9]* \\[[0-9]*\\%\\] \\[[^ ]*\\] \\[\\([a-z]*\\)\\].*/\\1/p'`"):read("*a")
                 remove_notification("volume");
-                if on_off == "on" then
-                    add_notification("volume", { timeout = 5, text = io.popen("echo -n `amixer -c 0 get PCM |sed -n 's/.*Front Left: Playback [0-9]* \\[\\([0-9]*\\)\\%\\] .*/Volume ON:\\1%/p'`"):read("*a") })
-                else
-                    add_notification("volume", { timeout = 5, text = "Volume OFF" })
-                end
+                add_notification("volume", { timeout = 5, text = io.popen(".local/share/bin/sound-ctl.sh toggle"):read("*a") })
             end),
         awful.key({  }, "XF86AudioNext",
             function ()

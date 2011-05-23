@@ -26,7 +26,7 @@ data_dir = os.getenv("HOME") .. "/.local/share/awesome/"
 beautiful.init(data_dir .. "/grodzik/theme.lua")
 
 -- This is used later as the default terminal and editor to run.
-terminal = "xterm"
+terminal = "urxvt"
 terminal_title_param = " -T "
 editor = os.getenv("EDITOR") or "vim"
 editor_cmd = terminal .. " -e " .. editor
@@ -129,7 +129,7 @@ awful.tag.setproperty(tags[1][1], "layout", layouts[1])
 awful.tag.setproperty(tags[1][2], "mwfact", 0.9)
 awful.tag.setproperty(tags[1][2], "layout", layouts[5])
 awful.tag.setproperty(tags[1][3], "layout", layouts[5])
-awful.tag.setproperty(tags[1][4], "layout", layouts[5])
+awful.tag.setproperty(tags[1][4], "layout", layouts[7])
 awful.tag.setproperty(tags[1][5], "mwfact", 0.7)
 awful.tag.setproperty(tags[1][5], "layout", layouts[1])
 awful.tag.setproperty(tags[1][5], "ncol", 2)
@@ -266,45 +266,38 @@ awful.rules.rules = {
     { rule = { class = "Skype" }, properties = {
         floating = true } },
     { rule = { class = "pinentry" }, properties = {
-            floating = true } }, 
+        floating = true } }, 
     { rule = { class = "Gimp" }, properties = {
-            tag = tags[1][5],
-            switchtotag = tags[1][5] } },
-    { rule = { class = "Claws Mail" }, properties = {
-            tag = tags[1][4],
-            switchtotag = tags[1][4] } },
-    { rule = { class = "Thunderbird" }, properties = {
-            tag = tags[1][4],
-            floating = "true",
-            switchtotag = tags[1][4] } },
+        tag = tags[1][5],
+        switchtotag = tags[1][5] } },
     { rule = { class = "wine" }, properties = {
-                floating = true } },
+        floating = true } },
     { rule = { name = "EKG2" }, properties = {
-            tag = tags[1][3],
-            switchtotag = tags[1][3] } },
+        tag = tags[1][3],
+        switchtotag = tags[1][3] } },
     { rule = { name = "IRSSI" }, properties = {
-            tag = tags[1][3],
-            switchtotag = tags[1][3] } },
+        tag = tags[1][3],
+        switchtotag = tags[1][3] } },
     { rule = { class = ".*Simutrans.*" }, properties = {
-                floating = false } },
+        floating = false } },
     { rule = { name = ".*Wine.*" }, properties = {
-                floating = true } },
+        floating = true } },
     { rule = { name = ".*VirtualBox" }, properties = {
-            tag = tags[1][7],
-            switchtotag = tags[1][7] } },
+        tag = tags[1][7],
+        switchtotag = tags[1][7] } },
     { rule = { name = ".*UltraStar Delux.*" }, properties = {
-            tag = tags[1][8],
-            switchtotag = tags[1][8] } },
+        tag = tags[1][8],
+        switchtotag = tags[1][8] } },
     { rule = { name = ".*stepmania.*" }, properties = {
-            tag = tags[1][8],
-            floating = true,
-            switchtotag = tags[1][8] } },
+        tag = tags[1][8],
+        floating = true,
+        switchtotag = tags[1][8] } },
     { rule = { name = ".*StepMania.*" }, properties = {
-            tag = tags[1][8],
-            floating = true,
-            switchtotag = tags[1][8] } },
-    -- Set Firefox to always map on tags number 2 of screen 1.  { rule = {
-    -- class = "Firefox" }, properties = { tag = tags[1][2] } },
+        tag = tags[1][8],
+        floating = true,
+        switchtotag = tags[1][8] } },
+    { rule = {  class = "Firefox" }, properties = {
+        tag = tags[1][2] } },
 }
 -- }}}
 
